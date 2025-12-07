@@ -79,7 +79,7 @@ pytest tests/
 - **Reservoir Characterization**: Removing coherent noise to improve attribute analysis.
 - **Earthquake Monitoring**: Reconstructing gaps in continuous waveform streams.
 
-## Advanced Capabilities
+## Advanced Capabilities (Implemented in v1.0.0)
 
 ### Physics-Informed Neural Networks (PINNs)
 Promethium includes a `PhysicsInformedNN` module (`src/promethium/ml/pinns.py`) that incorporates the acoustic wave equation into the loss function, ensuring that reconstructed wavefields are physically consistent.

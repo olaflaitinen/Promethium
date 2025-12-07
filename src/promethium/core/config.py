@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     """
     # Application
     APP_NAME: str = "Promethium"
-    APP_VERSION: str = "0.3.0"
+    APP_VERSION: str = "1.0.0"
     DEBUG: bool = False
     
     # API

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "promethium"
-version = "0.3.0"
+version = "1.0.0"
 description = "Advanced Seismic Data Recovery and Reconstruction Framework"
 authors = [{name = "Promethium Team", email = "dev@promethium.io"}]
 readme = "README.md"

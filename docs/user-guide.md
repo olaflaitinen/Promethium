@@ -1,44 +1,43 @@
 # User Guide
 
-This guide explains how to use Promethium to process seismic data.
+This guide explains how to use the Promethium Web Interface.
 
-## Prerequisites
+## Accessing the Dashboard
+Navigate to `http://localhost:3000` (or your deployment URL).
 
-- Access to a running Promethium instance (see Deployment Guide).
-- Seismic data in SEG-Y format.
+## Managing Datasets
 
-## Step 1: Accessing the Dashboard
+### Uploading Data
+1.  Go to the **Datasets** tab.
+2.  Click **Upload New**.
+3.  Select a SEG-Y or SEG-2 file.
+4.  Provide a unique name and optional description.
+5.  Click **Submit**. The file will be ingested and indexed asynchronously.
 
-Navigate to the web interface (default: `http://localhost:8000` or the configured ingress URL). You will see the main dashboard with two panels: **Dataset Registry** and **Processing Jobs**.
+### Inspecting Data
+Click on any dataset in the list to view its metadata, including trace count, sample rate, and acquisition geometry.
 
-## Step 2: Ingesting Data
+## Running Jobs
 
-1. Locate the **Dataset Registry** panel.
-2. Enter a friendly **Name** for the dataset.
-3. Select the **Format** (e.g., `SEGY`).
-4. Click **Choose File** and select your `.sgy` or `.segy` file.
-5. Click **Upload**.
-   - *Note*: Large files may take time. The system creates a memory map index upon upload.
+### Submitting a Job
+1.  Navigate to **Submit**.
+2.  Select a specific dataset.
+3.  Choose a processing workflow:
+    *   **Bandpass Filter**: Simple frequency filtering.
+    *   **Deconvolution**: Predictive deconvolution for multiple suppression.
+    *   **U-Net Reconstruction**: Deep learning-based interpolation.
+4.  Configure parameters (e.g., corners, gap size).
+5.  Click **Run**.
 
-## Step 3: Launching a Recovery Job
+### Monitoring Progress
+Go to the **Jobs** tab to see the status of all submissions.
+*   **Queued**: Waiting for a worker.
+*   **Processing**: Currently running.
+*   **Completed**: Finished successfully.
+*   **Failed**: Encountered an error (logs available).
 
-1. Locate the **Processing Jobs** panel.
-2. Select your uploaded dataset from the dropdown menu.
-3. Select the **Algorithm**:
-   - **U-Net Reconstruction**: Best for complex structure recovery.
-   - **Matrix Completion**: Best for randomly missing traces in dense surveys.
-   - **Deconvolution**: Removes wavelet effects (shortens the pulse).
-4. Click **Start Job**.
-5. The job will appear in the list with `QUEUED` status, transitioning to `RUNNING` and then `COMPLETED`.
-
-## Step 4: Viewing Results
-
-(Feature In Development)
-## Step 4: Viewing Results
-
-Once completed, the job entry will show a success status. You can view the reconstructed wavefield directly in the dashboard using the **Interactive Visualization** panel, which provides real-time heatmap plots of the seismic data. Results are also saved to the backend storage directory defined in `DATA_STORAGE_PATH`.
-
-## Troubleshooting
-
-- **Upload Fails**: Ensure the file is a valid SEG-Y Standard Revision 1 file. Custom headers may cause parsing issues.
-- **Job Fails**: Check the logs of the worker container. Common issues include insufficient memory for very large gathers or GPU OOM errors for U-Net inference on large patches.
+## Visualization
+The **Visualize** tab allows interactive inspection of seismic gathers.
+*   **Left Panel**: Original/Input data.
+*   **Right Panel**: Processed/Reconstructed output.
+*   **Controls**: Gain, clip, and zoom controls are available to enhance visibility.

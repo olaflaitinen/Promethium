@@ -1,26 +1,39 @@
 # Promethium Overview
 
-## The Challenge
+Promethium is a research-grade framework designed to bridge the gap between classical geophysical processing and modern deep learning for seismic data reconstruction.
 
-Seismic data acquisition is inherently constrained by logistics, economics, and environmental factors. This often results in datasets that are:
-- **Incomplete**: Missing traces due to dead channels or acquisition gaps involved in obstacle avoidance.
-- **Noisy**: Contaminated by ground roll, ambient noise, and acquisition artifacts.
-- **Irregular**: Sampled on non-Cartesian grids, complicating wavefield analysis.
+## Problem Statement
 
-Traditional processing workflows rely heavily on manual parameter tuning and linear theory. While effective, they often struggle with highly complex noise patterns or large gaps in spatial sampling.
+Seismic data acquisition is often constrained by logistical, financial, and environmental factors, leading to:
+*   **Irregular Sampling**: Gaps in spatial coverage.
+*   **Missing Traces**: Dead channels or rejected shots.
+*   **Aliasing**: Insufficient sampling of high-frequency signal components.
 
-## The Promethium Solution
+These deficiencies compromise downstream processing tasks such as migration, inversion, and attribute analysis.
 
-**Promethium** bridges the gap between rigourous classical geophysics and the generative power of modern Deep Learning.
+## Solution
 
-### Design Philosophy
+Promethium provides a unified environment to apply and compare:
+1.  **classical interpolation methods** (MWNI, POCS).
+2.  **optimization-based recovery** (Matrix Completion, Compressive Sensing).
+3.  **data-driven deep learning** (U-Nets, GANs).
+4.  **physics-informed deep learning** (PINNs).
 
-1.  **Scientific Integrity**: We prioritize physics-consistent reconstruction. Neural networks are not "black boxes" but tools constrained by the wave equation (via PINNs) or guided by domain knowledge.
-2.  **Scalability**: The system is designed for terabyte-scale surveys, utilizing asynchronous task queues and efficient memory mapping.
-3.  **Usability**: Advanced algorithms are accessible through a modern web interface, democratizing access to high-end recovery techniques.
+## Technology Stack
 
-## Core Capabilities
+### Frontend
+*   **Angular v17+**: Provides a robust, type-safe environment for building complex dashboards.
+*   **Plotly.js**: High-performance rendering of seismic traces and heatmaps.
+*   **RxJS**: Handles real-time data streams and state management.
 
--   **Hybrid Recovery**: Users can choose between fast, classical Matrix Completion methods for simple gaps, or deep U-Net architectures for complex diffraction reconstruction.
--   **Automated Quality Control**: Every processing job generates quantitative metrics (SNR, Frequency correlation) to validate results.
--   **Production Ready**: Built on standard industry formats (SEG-Y) and modern software stacks (Docker, FastAPI, React), Promethium fits into existing infrastructure seamlessly.
+### Backend
+*   **Python 3.10+**: The lingua franca of scientific computing and AI.
+*   **FastAPI**: High-performance, async-first web framework.
+*   **PyTorch**: The backend for all deep learning modules.
+*   **Celery/Redis**: Distributed task queue for managing long-running reconstruction jobs.
+
+## Design Philosophy
+
+*   **Modularity**: Algorithms are decoupled from I/O and visualization.
+*   **Reproducibility**: All experiments are configuration-driven and versioned.
+*   **Scalability**: Docker-first design ensures deployment consistency from laptop to cluster.

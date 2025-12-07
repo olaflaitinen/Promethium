@@ -15,17 +15,18 @@ class Settings(BaseSettings):
     API_PREFIX: str = "/api/v1"
     
     # Database
-    DATABASE_URL: str = "postgresql+asyncpg://user:password@localhost/promethium"
+    DATABASE_URL: str = "sqlite+aiosqlite:///./promethium.db"
     
-    # Redis
+    # Redis (Optional in Local Mode)
     REDIS_URL: str = "redis://localhost:6379/0"
     
     # Storage
-    DATA_STORAGE_PATH: str = "/var/lib/promethium/data"
+    DATA_STORAGE_PATH: str = "./data"
     
     # Worker
-    CELERY_BROKER_URL: str = "redis://localhost:6379/1"
-    CELERY_RESULT_BACKEND: str = "redis://localhost:6379/1"
+    CELERY_BROKER_URL: str = "memory://"
+    CELERY_RESULT_BACKEND: str = "db+sqlite:///./celery_results.db"
+    CELERY_TASK_ALWAYS_EAGER: bool = True
 
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=True)
 

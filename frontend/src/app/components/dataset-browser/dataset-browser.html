@@ -1,0 +1,20 @@
+<div class="dataset-container">
+    <h2>Datasets</h2>
+
+    <div class="upload-section">
+        <h3>Upload New</h3>
+        <input type="text" [(ngModel)]="datasetName" placeholder="Dataset Name" />
+        <input type="file" (change)="onFileSelected($event)" accept=".sgy,.segy" />
+        <button (click)="upload()" [disabled]="uploading || !selectedFile">
+            {{ uploading ? 'Uploading...' : 'Upload' }}
+        </button>
+    </div>
+
+    <div class="dataset-list">
+        <div *ngFor="let ds of datasets()" class="dataset-card">
+            <h4>{{ ds.name }}</h4>
+            <p>Format: {{ ds.format }}</p>
+            <p>Uploaded: {{ ds.upload_time | date }}</p>
+        </div>
+    </div>
+</div>

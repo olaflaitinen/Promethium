@@ -1,70 +1,72 @@
-# Architecture
+# Architecture Overview
 
-Promethium is built as a set of loosely coupled services and libraries.
+Promethium is architected as a set of loosely coupled modules and services, designed for scalability and maintainability.
 
-## High-Level Topology
+## System Diagram
 
-```mermaid
-graph TD
-    User[User / Researcher] -->|HTTP| MB[Web Dashboard (React)]
-    User -->|HTTP| API[Backend API (FastAPI)]
-    
-    subgraph "Application Layer"
-        MB --> API
-        API -->|Metadata| DB[(PostgreSQL)]
-        API -->|Task Queue| Redis[(Redis)]
-    end
-    
-    subgraph "Processing Layer"
-        Worker[Celery Worker] -->|Poll| Redis
-        Worker -->|Read/Write| Storage[File Storage (SEG-Y)]
-        Worker -->|Update| DB
-    end
-```
+The system consists of three main logical tiers:
 
-## Components
-
-### 1. Application Server (`src/promethium/api`)
-- **Technology**: FastAPI (Python), Uvicorn.
-- **Role**: Handles REST requests, validates inputs via Pydantic, controls the database transaction lifecycle, and dispatches long-running jobs to the queue.
-
-### 2. Processing Worker (`src/promethium/workflow`)
-- **Technology**: Celery, PyTorch, SciPy.
-- **Role**: Executes CPU/GPU-intensive tasks.
-  - **I/O Module**: Reads seismic data chunks efficiently.
-  - **Signal Module**: Applies filters and deconvolution.
-  - **ML Module**: Runs inference using pre-trained models.
-
-### 3. Frontend (`web/`)
-- **Technology**: React, TypeScript, Vite.
-- **Role**: Provides the visual interface for uploading datasets and configuring pipeline parameters.
-
-### 4. Persistence
-- **PostgreSQL**: Stores relational data:
-  - `datasets`: File paths, format info, acquisition headers.
-  - `jobs`: Status, parameters, execution logic.
-- **Redis**: Acts as the ephemeral message broker for Celery and caching layer.
-- **File System**: Physical storage for SEG-Y files (Raw and Processed).
-
-## Data Flow
-
-1.  **Ingestion**: User uploads a SEG-Y file. API streams it to shared storage and creates a `Dataset` record in PostgreSQL.
-2.  **Submission**: User selects a dataset and an algorithm (e.g., U-Net). API creates a `Job` record (status: QUEUED) and pushes a task ID to Redis.
-3.  **Execution**: Worker picks up the task.
-    - Loads data using `read_segy_robust`.
-    - Normalizes data.
-    - Passes data through the chosen `RecoveryAlgorithm` (e.g., `UNet.forward()`).
-    - Denormalizes and saves the result as a new SEG-Y file.
-4.  **Completion**: Worker updates `Job` status to COMPLETED and saves the `result_path`.
-5.  **Retrieval**: Frontend polls the API and displays the completion status.
+1.  **Presentation Tier (Frontend)**: An Angular Single Page Application (SPA).
+2.  **Application Tier (Backend)**: FastAPI REST API and Celery Workers.
+3.  **Data Tier**: PostgreSQL (Metadata), Redis (Broker/Cache), and File Storage (Seismic Data).
 
 ## Directory Structure
 
-| Path | Purpose |
-|------|---------|
-| `src/promethium/core` | Base classes, configuration, logging. |
-| `src/promethium/io` | Readers/Writers for SEG-Y, SAC, etc. |
-| `src/promethium/ml` | PyTorch models and training loops. |
-| `src/promethium/signal` | Filters and DSP algorithms. |
-| `src/promethium/api` | Web server routes and schemas. |
-| `src/promethium/workflows` | Celery task definitions. |
+The repository is organized as follows:
+
+```text
+promethium/
+├── docker/                 # Container configurations
+│   ├── backend.Dockerfile
+│   ├── frontend.Dockerfile
+│   └── docker-compose.yml
+├── docs/                   # Documentation (Markdown)
+├── frontend/               # Angular Application
+│   ├── src/
+│   │   ├── app/
+│   │   │   ├── components/ # Standalone Components
+│   │   │   ├── services/   # API Clients
+│   │   │   └── models/     # TypeScript Interfaces
+│   │   └── assets/
+│   ├── angular.json
+│   └── package.json
+├── src/
+│   └── promethium/
+│       ├── api/            # FastAPI Routes & Main App
+│       ├── core/           # Configuration & Logging
+│       ├── io/             # SEG-Y / Seismic Readers
+│       ├── ml/             # PyTorch Models (U-Net, PINNs)
+│       ├── recovery/       # Matrix Completion Algorithms
+│       ├── signal/         # DSP Filters
+│       └── workflows/      # Celery Tasks
+└── tests/                  # Pytest Suites
+```
+
+## Component Details
+
+### Frontend (Angular)
+The user interface is built with **Angular v17+**.
+*   **Build System**: Angular CLI (Webpack).
+*   **Architecture**: Standalone Components.
+*   **State Management**: Signals and RxJS.
+*   **Communication**: `HttpClient` service interacting with the FastAPI backend.
+
+### Backend (Python)
+The core logic resides in a Python monorepo structure installed as an editable package.
+*   **Framework**: FastAPI.
+*   **Concurrency**: Fully asynchronous (async/await).
+*   **Validation**: Pydantic v2.
+
+### Asynchronous Processing
+Heavy computational tasks (reconstruction, training) are offloaded to Celery workers.
+1.  User submits job via API.
+2.  API pushes task to Redis.
+3.  Celery Worker picks up task.
+4.  Worker updates status in PostgreSQL and saves results to disk/blob storage.
+
+## Data Flow
+
+1.  **Ingestion**: User uploads SEG-Y file. API validates headers and registers metadata in PostgreSQL. File is stored in `DATA_STORAGE_PATH`.
+2.  **Visualization**: Frontend requests trace data. Backend reads byte ranges using highly optimized `segyio` or memory-mapped numpy arrays and returns JSON/Binary data.
+3.  **Processing**: User configures a reconstruction pipeline (e.g., "U-Net Interpolation"). The job is queued.
+4.  **Result**: Upon completion, the backend notifies the client (polling or potential WebSocket), and the user can view the reconstructed gather side-by-side with the original.

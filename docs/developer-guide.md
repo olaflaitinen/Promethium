@@ -1,69 +1,77 @@
 # Developer Guide
 
-## Development Environment
+This guide provides instructions for setting up the development environment for Promethium.
 
-### Requirements
-- Python 3.10+
-- Node.js 18+ (for frontend)
-- Docker & Docker Compose (optional but recommended)
+## Prerequisites
+
+*   **Python**: v3.10 or higher.
+*   **Node.js**: v18 LTS or higher.
+*   **Docker**: Optional, but recommended for dependency management (Postgres/Redis).
+
+## Backend Development (Python)
+
+The backend is located in `src/promethium`.
 
 ### Setup
+1.  Create a virtual environment:
+    ```bash
+    python -m venv .venv
+    ```
+2.  Activate the environment:
+    *   Windows: `.venv\Scripts\activate`
+    *   Linux/Mac: `source .venv/bin/activate`
+3.  Install dependencies in editable mode:
+    ```bash
+    pip install -e .[dev]
+    ```
 
-1. **Backend**:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate
-   pip install -e .[dev]
-   ```
+### Running the API
+```bash
+uvicorn promethium.api.main:app --reload --host 0.0.0.0 --port 8000
+```
+The API documentation will be available at `http://localhost:8000/docs`.
 
-2. **Frontend**:
-   ```bash
-   cd web
-   npm install
-   ```
-
-## Codebase Structure
-
-- `src/promethium/`: Core Python package.
-  - `api/`: FastAPI application. Add new routers in `api/routers/`.
-  - `core/`: Shared utilities. `models.py` defines core data structures.
-  - `io/`: Data ingestion. New formats should inherit or follow patterns in `readers.py`.
-  - `ml/`: PyTorch definitions. `models.py` contains architectures.
-  - `signal/`: DSP algorithms.
-  - `workflows/`: Celery tasks defined in `tasks.py`.
-
-## Adding a New Algorithm
-
-To add a new signal processing or recovery algorithm:
-
-1. **Implement Logic**:
-   Create a new file in `src/promethium/signal` or `recovery`.
-   ```python
-   # src/promethium/signal/new_algo.py
-   def my_filter(data: np.ndarray, param: float) -> np.ndarray:
-       ...
-   ```
-
-2. **Expose in Worker**:
-   Update `src/promethium/workflows/tasks.py` to import and call your function inside `run_reconstruction_job` based on the `algorithm` parameter.
-
-3. **Update UI**:
-   Add the new option to the `<select>` element in `web/src/components/JobManager.tsx`.
-
-## Testing
-
-Run the full suite with:
+### Running Tests
+Promethium uses `pytest` for unit and integration testing.
 ```bash
 pytest tests/
 ```
 
-- **Unit Tests**: `tests/unit/` (Fast, isolated)
-- **Integration**: `tests/integration/` (Requires DB/Redis if not mocked)
+## Frontend Development (Angular)
 
-## Linting
+The frontend is located in the `frontend/` directory.
 
-We use `ruff` for linting and formatting.
+### Setup
+1.  Navigate to the directory:
+    ```bash
+    cd frontend
+    ```
+2.  Install dependencies:
+    ```bash
+    npm install
+    ```
+3.  Install Angular CLI globally (optional but recommended):
+    ```bash
+    npm install -g @angular/cli
+    ```
+
+### Running the Dev Server
 ```bash
-ruff check .
-ruff format .
+ng serve
+# Or via npm
+npm start
 ```
+The application will run at `http://localhost:4200`. A proxy is configured to forward `/api` requests to `http://localhost:8000`.
+
+### Building for Production
+```bash
+ng build --configuration production
+```
+Artifacts will be output to `frontend/dist/web/browser`.
+
+## Code Style
+
+*   **Python**: Follow PEP 8. Format code using `black` or `ruff`.
+*   **TypeScript**: Follow the official Angular Style Guide.
+*   **Git**: Use semantic commit messages (e.g., `feat: add robust seg-y reader`). 
+*   **Tone**: Keep all documentation and comments professional. Do not use emojis.

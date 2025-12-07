@@ -1,34 +1,31 @@
-# ML Pipelines
+# Machine Learning Pipelines
 
-Promethium integrates Deep Learning for advanced seismic reconstruction tasks, specifically focusing on data interpolation (inpainting) and denoising.
+Promethium integrates PyTorch for deep learning-based seismic processing.
 
 ## Models
 
-### U-Net
-The primary driver for reconstruction is a 2D U-Net architecture (`src/promethium/ml/models.py`).
-- **Input**: 1-channel seismic patches (Time x Trace), normalized.
-- **Output**: Reconstructed patches.
-- **Loss Function**: MSE (Mean Squared Error) between reconstructed and ground truth (or observed) data.
+### U-Net for Interpolation
+Located in `src/promethium/ml/models.py`.
+*   **Input**: 2D Seismic patches (regularly sampled, with zeros for missing traces).
+*   **Architecture**: Encoder-Decoder with skip connections.
+*   **Loss Function**: MSE + L1 (Composite loss).
 
-### Autoencoders (Planned)
-Denoising autoencoders are planned for unsupervised noise attenuation tasks.
+### Physics-Informed Neural Networks (PINNs)
+Located in `src/promethium/ml/pinns.py`.
+*   **Concept**: Incorporates the Wave Equation directly into the loss function.
+*   **Advantage**: Requires less training data; ensures physical consistency.
+*   **Usage**: Best for velocity model building and wavefield reconstruction in complex media.
 
 ## Training Pipeline
 
-The training logic is encapsulated in `src/promethium/ml/training.py`.
+1.  **Data Loading**: `SeismicTorchDataset` handles SEG-Y files, extracting 2D patches on-the-fly.
+2.  **Augmentation**: Random noise injection, gain scaling, and trace killing (masking) simulating missing data.
+3.  **Distributed Training**: `PromethiumLightningModule` wraps the models for multi-GPU training using PyTorch Lightning.
 
-### Data Loading
-Data is ingested via `SeismicTorchDataset` (`src/promethium/ml/data.py`).
-- **Patching**: Large seismic sections are sliced into fixed-size patches (e.g., 64x64).
-- **Augmentation**:
-  - **Trace Masking**: Simulates missing traces during training to teach the network to interpolate.
-  - **Noise Injection**: Adds Gaussian noise for robustness.
+## Inference
 
-### Execution
-Training can be triggered programmatically or via the Job API by passing specific parameters. The worker node utilizes GPU resources if `torch.cuda.is_available()` is true.
-
-## Evaluation Metrics
-
-- **MSE (Mean Squared Error)**: Pixel-wise difference.
-- **PSNR (Peak Signal-to-Noise Ratio)**: Quality of reconstruction relative to signal power.
-- **SSIM (Structural Similarity Index)**: Perceptual quality metric (planned).
+Inference is handled by the `InferencePipeline` class:
+1.  Loads model checkpoint.
+2.  Segments input gather into overlapping patches.
+3.  Predicts missing traces.
+4.  Merges patches with tapering to avoid edge artifacts.

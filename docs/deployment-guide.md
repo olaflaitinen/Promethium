@@ -1,28 +1,53 @@
 # Deployment Guide
 
-## Docker Stack
+This document outlines the procedures for deploying the Promethium framework in a production environment.
 
-Promethium is designed to be deployed using Docker. The `docker-compose.yml` file defines the standard stack.
+## Containerization Strategy
 
-### Services
+Promethium uses a multi-container architecture orchestrated by Docker Compose.
 
-| Service | Image | Internal Port | Description |
-|---------|-------|---------------|-------------|
-| `api` | `promethium-backend` | 8000 | FastAPI REST server. |
-| `worker`| `promethium-backend` | - | Celery worker process. |
-| `db` | `postgres:15-alpine` | 5432 | Metadata store. |
-| `redis` | `redis:7-alpine` | 6379 | Message broker & cache. |
+### Backend Images
+*   **Base**: `python:3.10-slim`
+*   **Build Context**: Root repository
+*   **Dockerfile**: `docker/backend.Dockerfile`
+*   **Optimization**: Multi-stage build to reduce image size; only runtime dependencies are included in the final image.
 
-### Configuration
+### Frontend Images
+*   **Base**: `nginx:alpine`
+*   **Build Context**: `frontend/`
+*   **Dockerfile**: `docker/frontend.Dockerfile`
+*   **Process**:
+    1.  Node.js container builds the Angular application (`npm run build`).
+    2.  Nginx container serves the static assets from `dist/web/browser`.
+    3.  Nginx acts as a reverse proxy for the API if configured, though the default setup exposes API on a separate port.
 
-Environment variables control the deployment. These are set in `docker-compose.yml` but should be managed via `.env` in production.
+## Production Configuration
 
-- `DATABASE_URL`: Connection string for PostgreSQL.
-- `CELERY_BROKER_URL`: Redis URL for Celery.
-- `DATA_STORAGE_PATH`: Host directory mounted to containers for persisting large files.
+### Environment Variables
+Ensure the following variables are set in your deployment environment (e.g., `.env` file or Kubernetes secrets):
 
-### Production Considerations
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `DATABASE_URL` | PostgreSQL Connection String | `postgresql+asyncpg://...` |
+| `REDIS_URL` | Redis Connection String | `redis://...` |
+| `CELERY_BROKER_URL` | Celery Broker | `redis://...` |
+| `DATA_STORAGE_PATH` | Path to persistent volume | `/data` |
 
-1. **Reverse Proxy**: Place Nginx or Traefik in front of the `api` service to handle SSL termination and static file serving.
-2. **Persistence**: Ensure the `/data` volume and Postgres volumes are backed by reliable storage (e.g., EBS, NFS).
-3. **Scaling**: The `worker` service can be scaled horizontally (`docker compose up -d --scale worker=3`) to handle higher job throughput.
+### Docker Compose
+To launch the production stack:
+
+```bash
+docker compose -f docker/docker-compose.yml up --build -d
+```
+
+### Kubernetes (Helm)
+For cluster deployment, use the provided Helm charts.
+
+```bash
+helm install promethium charts/promethium --set ingress.enabled=true
+```
+
+## Scaling
+*   **API**: Stateless; can be horizontally scaled behind a load balancer.
+*   **Workers**: CPU-bound; scale based on job queue depth.
+*   **Database**: Vertical scaling recommended; read-replicas for high read load.

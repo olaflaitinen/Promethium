@@ -40,21 +40,20 @@ For a detailed breakdown, please refer to the [Architecture Documentation](docs/
 
 ### Running the Full Stack
 
-To simplify evaluation, Promethium provides a Docker Compose configuration that orchestrates the API, Worker, Database (PostgreSQL), and Message Broker (Redis).
+To simplify evaluation, Promethium provides a Docker Compose configuration that orchestrates the API, Worker, Database (PostgreSQL), Message Broker (Redis), and Frontend.
 
-1. **Clone the Repository**
-   ```bash
-   git clone https://github.com/olaflaitinen/Promethium.git
-   cd Promethium
-   ```
+**Windows (PowerShell)**:
+```powershell
+./run_local.ps1
+```
 
-2. **Launch Services**
-   ```bash
-   docker compose up --build -d
-   ```
+**Manual**:
+```bash
+docker compose up --build -d
+```
 
 3. **Access Interfaces**
-   - **Web Dashboard**: http://localhost:8000 (Hosted via API static mount or separate frontend service)
+   - **Web Dashboard**: http://localhost:3000
    - **API Documentation**: http://localhost:8000/docs
 
 ### Local Development (Python)

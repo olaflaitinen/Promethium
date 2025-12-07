@@ -79,19 +79,19 @@ pytest tests/
 - **Reservoir Characterization**: Removing coherent noise to improve attribute analysis.
 - **Earthquake Monitoring**: Reconstructing gaps in continuous waveform streams.
 
-## Future Roadmap
+## Advanced Capabilities
 
-The following features are planned for upcoming releases (`v0.2.0` and `v0.3.0`) and are partially scaffolded in the repository:
+### Physics-Informed Neural Networks (PINNs)
+Promethium includes a `PhysicsInformedNN` module (`src/promethium/ml/pinns.py`) that incorporates the acoustic wave equation into the loss function, ensuring that reconstructed wavefields are physically consistent.
 
-### Phase 2: Advanced Recovery
-- **PINNs (`src/promethium/ml/pinns.py`)**: Implementation of Physics-Informed Neural Networks enforcing wave-equation constraints.
-- **Matrix Completion**: Optimization of SoftImpute algorithms using Numba/Cython for production speed.
-- **Interactive Plots**: Integration of Plotly.js/Canvas for high-performance real-time seismic visualization in the dashboard.
+### High-Performance Recovery
+The `SoftImpute` algorithm (`src/promethium/recovery/matrix_completion.py`) is optimized with truncated SVD for efficient handling of large-scale matrices.
 
-### Phase 3: Scale & Cloud
-- **Kubernetes Support**: Helm charts for cluster-based deployment.
-- **Cloud Storage (`src/promethium/io/cloud.py`)**: S3/Azure Blob Storage adapters for the I/O layer.
-- **Distributed Training**: Multi-GPU support functionality using PyTorch Lightning.
+### Cloud-Native I/O & Scale
+- **Cloud Storage**: Built-in adapters (`src/promethium/io/cloud.py`) for S3 and Azure Blob Storage.
+- **Distributed Training**: Helpers for multi-GPU training via PyTorch Lightning (`src/promethium/ml/training_distributed.py`).
+- **Kubernetes**: Production-ready Helm charts (`charts/promethium`) for cluster deployment.
+
 
 ## Documentation
 

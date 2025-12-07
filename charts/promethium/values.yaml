@@ -1,0 +1,39 @@
+# Default values for promethium.
+
+replicaCount: 1
+
+image:
+  repository: promethium-backend
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+service:
+  type: ClusterIP
+  port: 8000
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+
+resources: 
+  limits:
+    cpu: 1000m
+    memory: 2Gi
+  requests:
+    cpu: 100m
+    memory: 512Mi
+
+postgresql:
+  enabled: true
+  auth:
+    postgresPassword: "password"
+    database: "promethium"
+
+redis:
+  enabled: true

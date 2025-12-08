@@ -1,22 +1,134 @@
 # Frequently Asked Questions
 
+This document answers common questions about Promethium.
+
 ## General
 
-**Q: What formats does Promethium support?**
-A: Promethium natively supports SEG-Y. Support for SEG-2, SAC, and miniSEED is experimental.
+### What is Promethium?
 
-**Q: Can I run Promethium without a GPU?**
-A: Yes, but training deep learning models will be extremely slow. Inference can run on CPU/RAM, but GPU is recommended for production throughput.
+Promethium is an open-source framework for seismic data recovery and reconstruction using AI/ML techniques. It supports standard seismic formats and provides both a web interface and API.
 
-## Technical
+### Who is Promethium for?
 
-**Q: How does Zarr improve performance?**
-A: SEG-Y is designed for tape drives (sequential access). Zarr enables efficient, parallel random access to multidimensional chunks, which matches the access pattern of patch-based ML training.
+- Exploration geophysicists
+- Seismologists
+- Research institutions
+- Oil and gas companies
+- Engineering firms
 
-**Q: Is the Physics-Informed loss fully rigorous?**
-A: The current implementation enforces the Acoustic Wave Equation via finite-difference kernels. It assumes constant density and ignores elastic effects (shear waves), which is a common simplification in seismic processing.
+### What license is Promethium under?
 
-## Licensing
+Promethium is licensed under CC BY-NC 4.0 (Creative Commons Attribution-NonCommercial 4.0). Commercial use requires a separate license.
 
-**Q: Can I use Promethium for commercial projects?**
-A: Provide the current project license is proprietary, you must obtain a commercial license. Please contact the maintainers.
+---
+
+## Data Formats
+
+### Which formats are supported?
+
+| Format | Read | Write |
+|--------|------|-------|
+| SEG-Y | Yes | Yes |
+| SEG-2 | Yes | No |
+| miniSEED | Yes | Yes |
+| SAC | Yes | Yes |
+
+### Can I add custom format support?
+
+Yes, Promethium has a plugin architecture for custom readers and writers. See [Developer Guide](developer-guide.md).
+
+### What is the maximum file size?
+
+There is no hard limit. Streaming I/O handles files larger than available memory.
+
+---
+
+## Models
+
+### Which reconstruction models are available?
+
+- U-Net variants
+- Variational Autoencoders (VAE)
+- GANs
+- Physics-Informed Neural Networks (PINN)
+
+### Can I train custom models?
+
+Yes. Prepare training data and use the training pipeline. See [ML Pipelines](ml-pipelines.md).
+
+### Do I need a GPU?
+
+A GPU significantly accelerates ML operations but is not required. CPU inference is supported.
+
+---
+
+## Deployment
+
+### How do I install Promethium?
+
+We recommend Docker Compose for most deployments:
+
+```bash
+docker compose -f docker/docker-compose.yml up -d
+```
+
+See [Deployment Guide](deployment-guide.md).
+
+### Can I run Promethium without Docker?
+
+Yes. Install Python dependencies and run services manually. See [Developer Guide](developer-guide.md).
+
+### What are the system requirements?
+
+Minimum: 4 CPU cores, 16 GB RAM
+Recommended: 16+ cores, 64+ GB RAM, GPU
+
+---
+
+## Troubleshooting
+
+### Job stuck in Pending?
+
+Check that workers are running:
+
+```bash
+docker compose ps
+```
+
+### Poor reconstruction quality?
+
+- Try a different model
+- Check data preprocessing
+- Increase ensemble runs
+- Verify model matches data type
+
+### Upload fails?
+
+- Check file size limits
+- Verify format is supported
+- Check browser console for errors
+
+---
+
+## Support
+
+### How do I get help?
+
+See [SUPPORT.md](../SUPPORT.md) for support options.
+
+### How do I report bugs?
+
+Open a GitHub Issue with reproduction steps.
+
+### How do I request features?
+
+Use GitHub Discussions or open a feature request issue.
+
+---
+
+## Related Documents
+
+| Document | Description |
+|----------|-------------|
+| [User Guide](user-guide.md) | User documentation |
+| [Support](../SUPPORT.md) | Support resources |

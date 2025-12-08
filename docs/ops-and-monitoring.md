@@ -1,32 +1,140 @@
-# Operations & Monitoring
+# Operations and Monitoring
+
+This document covers logging, metrics, monitoring, and operational practices for Promethium.
 
 ## Logging
 
-Promethium uses structured logging.
+### Log Configuration
 
-*   **Format**: Logs are emitted with timestamp, level, module, and message.
-*   **Aggregation**: In production, logs from Docker containers should be aggregated to a central system (e.g., ELK Stack, Splunk, or CloudWatch).
+```yaml
+logging:
+  level: INFO
+  format: json
+  output:
+    - console
+    - file: /var/log/promethium/app.log
+```
+
+### Log Levels
+
+| Level | Usage |
+|-------|-------|
+| DEBUG | Detailed debugging information |
+| INFO | General operational information |
+| WARNING | Potential issues |
+| ERROR | Errors requiring attention |
+| CRITICAL | System failures |
+
+### Structured Logging
+
+```python
+import structlog
+logger = structlog.get_logger()
+
+logger.info("job_started", job_id=job_id, dataset_id=dataset_id)
+```
+
+---
 
 ## Metrics
 
-The system exposes metrics via **Prometheus**.
+### Available Metrics
 
-### Key Metrics
-*   `http_request_duration_seconds`: API latency.
-*   `job_duration_seconds`: Time taken for training/inference jobs.
-*   `gpu_utilization`: GPU usage on worker nodes (via DCGM exporter).
-*   `memory_usage`: RAM consumption.
+| Metric | Type | Description |
+|--------|------|-------------|
+| promethium_jobs_total | Counter | Total jobs by status |
+| promethium_job_duration_seconds | Histogram | Job execution time |
+| promethium_api_requests_total | Counter | API requests |
+| promethium_api_latency_seconds | Histogram | API response time |
+| promethium_worker_tasks_active | Gauge | Active worker tasks |
 
-## Monitoring Stack
+### Prometheus Endpoint
 
-A default monitoring stack is provided in `docker/docker-compose.monitor.yml`.
+```
+GET /metrics
+```
 
-### Components
-1.  **Prometheus**: Scrapes metrics from the API and Worker services.
-2.  **Grafana**: Visualization dashboard connected to Prometheus. Defaults to port `3000`.
+### Grafana Dashboards
 
-## Operational Best Practices
+Pre-built dashboards available:
 
-*   **Backups**: Regularly backup the PostgreSQL database (`promethium-db`) and the Zarr storage volume.
-*   **Scaling**: The Worker service (`promethium-worker`) is stateless and can be scaled horizontally across multiple GPU nodes (requires Swarm or Kubernetes).
-*   **Resource Limits**: Set Docker resource limits (CPU/RAM) to prevent OOM kills impacting other services.
+- System Overview
+- Job Processing
+- API Performance
+- Worker Health
+
+---
+
+## Health Checks
+
+### Endpoints
+
+| Endpoint | Purpose |
+|----------|---------|
+| /health | Basic health |
+| /health/ready | Readiness probe |
+| /health/live | Liveness probe |
+
+### Kubernetes Probes
+
+```yaml
+livenessProbe:
+  httpGet:
+    path: /health/live
+    port: 8000
+  initialDelaySeconds: 10
+  periodSeconds: 30
+
+readinessProbe:
+  httpGet:
+    path: /health/ready
+    port: 8000
+  initialDelaySeconds: 5
+  periodSeconds: 10
+```
+
+---
+
+## Alerting
+
+### Alert Rules
+
+| Alert | Condition | Severity |
+|-------|-----------|----------|
+| HighErrorRate | Error rate > 5% | Warning |
+| JobQueueBacklog | Queue > 100 | Warning |
+| WorkerDown | Worker unavailable | Critical |
+| DatabaseConnectionLost | DB unreachable | Critical |
+
+### Notification Channels
+
+- Email
+- Slack
+- PagerDuty
+
+---
+
+## Operational Runbooks
+
+### High Job Queue
+
+1. Check worker health
+2. Scale workers if needed
+3. Check for stuck jobs
+4. Review error logs
+
+### Database Issues
+
+1. Check connection pool
+2. Verify database health
+3. Review slow queries
+4. Check disk space
+
+---
+
+## Related Documents
+
+| Document | Description |
+|----------|-------------|
+| [Deployment Guide](deployment-guide.md) | Deployment instructions |
+| [Configuration](configuration.md) | Configuration reference |

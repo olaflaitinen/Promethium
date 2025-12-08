@@ -1,0 +1,28 @@
+cff-version: 1.2.0
+title: "Promethium: Advanced Seismic Data Recovery and Reconstruction Framework"
+message: "If you use this software, please cite it as below."
+type: software
+authors:
+  - family-names: "Laitinen Imanov"
+    given-names: "Olaf Yunus"
+    orcid: "https://orcid.org/0000-0000-0000-0000"
+repository-code: "https://github.com/olaflaitinen/promethium"
+url: "https://github.com/olaflaitinen/promethium"
+abstract: >-
+  Promethium is a state-of-the-art, AI-driven framework for seismic signal
+  reconstruction, denoising, and geophysical data enhancement. It integrates
+  cutting-edge deep learning architectures (U-Net, VAE, GAN, PINN, Transformers,
+  Neural Operators) with robust signal processing and production-grade data
+  engineering practices.
+keywords:
+  - seismic
+  - geophysics
+  - machine-learning
+  - deep-learning
+  - signal-processing
+  - reconstruction
+  - denoising
+  - physics-informed-neural-networks
+license: CC-BY-NC-4.0
+version: 1.0.0
+date-released: "2025-12-08"

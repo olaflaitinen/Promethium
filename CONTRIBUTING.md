@@ -1,79 +1,328 @@
 # Contributing to Promethium
 
-Thank you for your interest in contributing to Promethium. This document outlines the process for contributing to the project, ensuring that your contributions can be integrated efficiently and effectively.
+Thank you for your interest in contributing to the Promethium project. This document provides guidelines and procedures for contributing to ensure a smooth collaboration process.
 
-## Contribution Philosophy
+## Table of Contents
 
-Promethium aims to be a definitive framework for seismic data reconstruction. We value:
+- [Code of Conduct](#code-of-conduct)
+- [Getting Started](#getting-started)
+- [Development Environment](#development-environment)
+- [Contribution Workflow](#contribution-workflow)
+- [Coding Standards](#coding-standards)
+- [Testing Requirements](#testing-requirements)
+- [Documentation](#documentation)
+- [Pull Request Process](#pull-request-process)
+- [Issue Reporting](#issue-reporting)
+- [Licensing](#licensing)
 
-1.  **Technical Excellence**: Code should be performant, robust, and mathematically correct.
-2.  **Clarity**: Documentation and code comments must be precise and unambiguous.
-3.  **Reproducibility**: All algorithmic results must be reproducible via provided configurations and seeds.
+---
 
-## Development Environment Setup
+## Code of Conduct
 
-### Backend (Python)
+All contributors are expected to adhere to the project's [Code of Conduct](CODE_OF_CONDUCT.md). By participating, you agree to uphold a respectful, inclusive, and professional environment.
 
-The backend requires **Python 3.10+**. We recommend using `Conda` or `venv` for environment management.
+---
+
+## Getting Started
+
+### Prerequisites
+
+Before contributing, ensure you have the following installed:
+
+- Python 3.10 or higher
+- Node.js 20 or higher
+- Docker and Docker Compose
+- Git
+
+### Fork and Clone
+
+1. Fork the repository on GitHub.
+2. Clone your fork locally:
 
 ```bash
-# Create environment
-conda create -n promethium python=3.10
-conda activate promethium
-
-# Install dependencies
-pip install -r requirements.txt
-pip install -r requirements-dev.txt
+git clone https://github.com/<your-username>/promethium.git
+cd promethium
 ```
 
-### Frontend (Angular)
+3. Add the upstream repository as a remote:
 
-The frontend requires **Node.js 20+**.
+```bash
+git remote add upstream https://github.com/olaflaitinen/promethium.git
+```
+
+---
+
+## Development Environment
+
+### Backend Setup
+
+```bash
+# Create virtual environment
+python -m venv .venv
+source .venv/bin/activate  # Linux/macOS
+.venv\Scripts\activate     # Windows
+
+# Install development dependencies
+pip install -e ".[dev]"
+
+# Install pre-commit hooks
+pre-commit install
+```
+
+### Frontend Setup
 
 ```bash
 cd frontend
-npm ci
+npm install
 ```
 
-### Docker
+### Running Services Locally
 
-Ensure **Docker Engine** and **Docker Compose** are installed to run the full integration stack locally.
+For full-stack development, use Docker Compose:
+
+```bash
+docker compose -f docker/docker-compose.yml up -d postgres redis
+```
+
+Then run the backend and frontend development servers:
+
+```bash
+# Terminal 1: Backend
+uvicorn src.promethium.api.main:app --reload
+
+# Terminal 2: Frontend
+cd frontend && npm start
+```
+
+---
+
+## Contribution Workflow
+
+### Branch Naming Convention
+
+Use descriptive branch names with the following prefixes:
+
+| Prefix | Purpose |
+|--------|---------|
+| `feature/` | New features |
+| `bugfix/` | Bug fixes |
+| `docs/` | Documentation changes |
+| `refactor/` | Code refactoring |
+| `test/` | Test additions or modifications |
+| `chore/` | Maintenance tasks |
+
+Example: `feature/add-sac-format-support`
+
+### Workflow Steps
+
+1. **Sync with upstream**:
+   ```bash
+   git fetch upstream
+   git checkout main
+   git merge upstream/main
+   ```
+
+2. **Create a feature branch**:
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+
+3. **Make changes**: Implement your changes following the coding standards.
+
+4. **Test your changes**: Ensure all tests pass.
+
+5. **Commit changes**: Use meaningful commit messages.
+
+6. **Push to your fork**:
+   ```bash
+   git push origin feature/your-feature-name
+   ```
+
+7. **Open a Pull Request**: Submit a PR against the `main` branch.
+
+---
 
 ## Coding Standards
 
-### Python
+### Python Code Style
 
-*   **Style**: We adhere to **PEP 8**.
-*   **Linting**: use `ruff` for linting and import sorting.
-*   **Formatting**: Use `black` for code formatting.
-*   **Typing**: All function signatures must be fully type-hinted.
+- **Formatter**: Black (line length 88)
+- **Linter**: Ruff
+- **Type Hints**: Required for all public functions and methods
+- **Docstrings**: Google-style docstrings for modules, classes, and functions
 
-### Angular / TypeScript
+```python
+def compute_snr(signal: np.ndarray, noise: np.ndarray) -> float:
+    """Compute the signal-to-noise ratio.
 
-*   Follow the official [Angular Style Guide](https://angular.io/guide/styleguide).
-*   Use `ESLint` and `Prettier` configurations provided in the repository.
+    Args:
+        signal: The signal array.
+        noise: The noise array.
 
-### Commit Messages
+    Returns:
+        The computed SNR in decibels.
 
-Use the [Conventional Commits](https://www.conventionalcommits.org/) specification:
+    Raises:
+        ValueError: If arrays have different shapes.
+    """
+    ...
+```
 
-*   `feat: ...` for new features.
-*   `fix: ...` for bug fixes.
-*   `docs: ...` for documentation changes.
-*   `refactor: ...` for code restructuring without behavioral change.
+### TypeScript Code Style
 
-## Pull Request Guidelines
+- **Formatter**: Prettier
+- **Linter**: ESLint with Angular configuration
+- **Strict Mode**: TypeScript strict mode enabled
 
-1.  **Branch Naming**: Use descriptive names, e.g., `feat/unet-attention-blocks` or `fix/segy-header-parsing`.
-2.  **Scope**: Keep PRs focused on a single logical change.
-3.  **Testing**: Include unit tests for new logic. Ensure all existing tests pass.
-4.  **Documentation**: Update relevant documentation in `docs/` if functionality changes.
+### General Guidelines
+
+- Keep functions focused and single-purpose.
+- Prefer composition over inheritance.
+- Write self-documenting code with clear variable names.
+- Avoid magic numbers; use named constants.
+- Handle errors explicitly.
+
+---
+
+## Testing Requirements
+
+### Backend Tests
+
+All contributions must include appropriate tests:
+
+```bash
+# Run all tests
+pytest tests/ -v
+
+# Run with coverage
+pytest tests/ --cov=src/promethium --cov-report=html
+
+# Run specific test file
+pytest tests/unit/test_filtering.py -v
+```
+
+### Frontend Tests
+
+```bash
+cd frontend
+
+# Run unit tests
+npm test
+
+# Run with coverage
+npm run test:coverage
+```
+
+### Test Coverage Requirements
+
+- New features: Minimum 80% line coverage
+- Bug fixes: Include regression tests
+- Critical paths: 100% coverage expected
+
+---
+
+## Documentation
+
+### Documentation Requirements
+
+- All public APIs must be documented.
+- New features require user-facing documentation updates.
+- Complex algorithms should include explanatory comments.
+- Update the relevant `docs/*.md` files as needed.
+
+### Building Documentation
+
+```bash
+# If using MkDocs
+mkdocs serve
+```
+
+---
+
+## Pull Request Process
+
+### Before Submitting
+
+1. Ensure all tests pass locally.
+2. Run linters and formatters.
+3. Update documentation if applicable.
+4. Rebase on the latest `main` branch.
+
+### Pull Request Template
+
+When opening a PR, include:
+
+- **Description**: Clear explanation of changes.
+- **Related Issue**: Link to related issue(s).
+- **Type of Change**: Feature, bugfix, docs, etc.
+- **Testing**: How the changes were tested.
+- **Checklist**: Confirmation of coding standards adherence.
+
+### Review Process
+
+1. At least one maintainer approval is required.
+2. All CI checks must pass.
+3. Address reviewer feedback promptly.
+4. Squash commits before merging if requested.
+
+### Merge Strategy
+
+- Feature branches are merged via squash merge.
+- The PR author is credited in the squash commit message.
+
+---
 
 ## Issue Reporting
 
-When filing an issue, please include:
+### Bug Reports
 
-1.  A clear, descriptive title.
-2.  Steps to reproduce the issue (minimal example).
-3.  Expected vs. actual behavior.
-4.  Environment details (OS, Python version, Docker version).
+When reporting bugs, include:
+
+- Promethium version
+- Operating system and version
+- Python/Node.js version
+- Minimal reproduction steps
+- Expected versus actual behavior
+- Relevant logs or error messages
+
+### Feature Requests
+
+When requesting features, include:
+
+- Problem statement
+- Proposed solution
+- Use case description
+- Alternative solutions considered
+
+### Issue Labels
+
+| Label | Description |
+|-------|-------------|
+| `bug` | Confirmed bugs |
+| `enhancement` | Feature requests |
+| `documentation` | Documentation improvements |
+| `good first issue` | Suitable for new contributors |
+| `help wanted` | Community help requested |
+| `priority: high` | High-priority issues |
+
+---
+
+## Licensing
+
+By contributing to Promethium, you agree that your contributions will be licensed under the same license as the project: **Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)**.
+
+You certify that you have the right to submit the contribution under this license.
+
+---
+
+## Recognition
+
+Contributors are recognized in the following ways:
+
+- Listed in the repository's contributor list
+- Mentioned in release notes for significant contributions
+- Acknowledged in relevant documentation sections
+
+---
+
+Thank you for contributing to Promethium. Your efforts help advance the field of seismic data science.

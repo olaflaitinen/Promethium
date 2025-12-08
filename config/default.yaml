@@ -1,0 +1,70 @@
+# Promethium Default Configuration
+# This file contains default settings for all environments
+
+# Database Configuration
+database:
+  driver: postgresql+asyncpg
+  host: localhost
+  port: 5432
+  name: promethium
+  pool_size: 10
+  max_overflow: 20
+
+# Redis Configuration
+redis:
+  host: localhost
+  port: 6379
+  db: 0
+  password: null
+
+# Storage Configuration
+storage:
+  backend: local  # local, s3, gcs
+  base_path: /data/promethium
+  datasets_dir: datasets
+  models_dir: models
+  results_dir: results
+
+# API Configuration
+api:
+  host: 0.0.0.0
+  port: 8000
+  debug: false
+  cors_origins:
+    - http://localhost:4200
+  rate_limit:
+    enabled: true
+    requests_per_minute: 60
+
+# Authentication
+auth:
+  algorithm: HS256
+  access_token_expire_minutes: 30
+  refresh_token_expire_days: 7
+
+# ML Configuration
+ml:
+  device: auto  # auto, cuda, cpu
+  default_model: unet-v2
+  models_path: /models
+  inference:
+    batch_size: 8
+    precision: float16
+
+# Worker Configuration
+workers:
+  concurrency: 4
+  prefetch_multiplier: 2
+  task_time_limit: 3600
+
+# Logging Configuration
+logging:
+  level: INFO
+  format: json
+  file: /var/log/promethium/app.log
+
+# Metrics Configuration
+metrics:
+  enabled: true
+  port: 9090
+  path: /metrics

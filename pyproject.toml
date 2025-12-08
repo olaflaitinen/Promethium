@@ -5,15 +5,23 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "promethium"
 version = "1.0.0"
-description = "Advanced Seismic Data Recovery and Reconstruction Framework"
-authors = [{name = "Promethium Team", email = "dev@promethium.io"}]
+description = "State-of-the-art AI-driven framework for seismic signal reconstruction, denoising, and geophysical data enhancement"
+authors = [{name = "Olaf Yunus Laitinen Imanov", email = "contact@promethium.dev"}]
 readme = "README.md"
+license = {text = "CC-BY-NC-4.0"}
 requires-python = ">=3.10"
+keywords = ["seismic", "geophysics", "reconstruction", "deep-learning", "signal-processing", "pytorch"]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
     "Topic :: Scientific/Engineering :: Physics",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "License :: Other/Proprietary License",
+    "Operating System :: OS Independent",
 ]
 dependencies = [
     "numpy>=1.24",

@@ -1,17 +1,102 @@
 # Roadmap
 
-> **Disclaimer**: This roadmap is tentative and subject to change based on community feedback and research priorities.
+This document outlines the development roadmap for Promethium, a state-of-the-art seismic data recovery framework initiated in December 2025.
 
-## Near Term (v2.1)
-*   **Advanced PINNs**: Implementation of Elastic Wave Equation (multi-component) constraints.
-*   **3D Visualization**: WebGL-based volume rendering in the browser.
-*   **Hyperparameter Tuning**: Integration with Ray Tune or Optuna for automated parameter search.
+## Vision
 
-## Mid Term (v3.0)
-*   **Transformer Models**: Implementation of Swin-Transformer and Vision Transformers for seismic processing.
-*   **Real-time Streaming**: Full support for Kafka-based streaming ingestion and inference.
-*   **Cloud Native Ops**: Helm charts for Kubernetes deployment and Terraform scripts for AWS/GCP.
+Promethium aims to be the leading open-source, state-of-the-art framework for AI-driven seismic data recovery, serving both research and industry applications at the cutting edge of deep learning and geophysics.
 
-## Long Term
-*   **Foundation Models**: Pretraining a large-scale seismic foundation model on public archives.
-*   **Edge Deployment**: Quantized models for running on edge devices (nodes, buoys).
+---
+
+## Current Phase (December 2025)
+
+### Completed
+
+- [x] Core reconstruction pipeline
+- [x] SEG-Y and miniSEED support
+- [x] U-Net model architecture
+- [x] Web interface for job management
+- [x] Docker deployment
+
+### In Progress
+
+- [ ] Physics-informed neural networks (PINN)
+- [ ] Transformer-based reconstruction models
+- [ ] Multi-GPU training support
+- [ ] Enhanced visualization tools
+
+### Planned
+
+- [ ] SAC format support
+- [ ] Real-time job progress streaming
+- [ ] Dark mode UI theme
+- [ ] API rate limiting improvements
+
+---
+
+## Short-Term (Q1-Q2 2026)
+
+### Features
+
+- [ ] 3D volume reconstruction
+- [ ] Automated hyperparameter tuning
+- [ ] Cloud deployment guides (AWS, GCP, Azure)
+- [ ] Mobile-responsive interface
+- [ ] Advanced authentication (OAuth, SSO)
+
+### Performance
+
+- [ ] Optimized inference for edge deployment
+- [ ] Memory-efficient training for large models
+- [ ] Distributed processing improvements
+
+### Integration
+
+- [ ] Petrel integration plugin
+- [ ] OpenWorks connectivity
+- [ ] SEGY-SAK interoperability
+
+---
+
+## Medium-Term (Q3-Q4 2026)
+
+### Advanced Capabilities
+
+- [ ] Self-supervised learning from unlabeled data
+- [ ] Foundation models for seismic
+- [ ] Automated quality assessment
+- [ ] Active learning workflows
+
+### Enterprise Features
+
+- [ ] Multi-tenant deployment
+- [ ] Advanced audit logging
+- [ ] Compliance reporting
+- [ ] SLA management
+
+### Research Directions
+
+- [ ] Elastic wave equation PINN
+- [ ] Uncertainty-aware inversion
+- [ ] Cross-domain transfer learning
+
+---
+
+## Feature Requests
+
+Community feature requests are tracked in GitHub Issues with the `enhancement` label.
+
+### How to Contribute
+
+1. Open a discussion for new ideas
+2. Submit detailed feature requests
+3. Contribute code via pull requests
+
+---
+
+## Related Documents
+
+| Document | Description |
+|----------|-------------|
+| [Contributing](../CONTRIBUTING.md) | Contribution guidelines |
+| [Governance](../GOVERNANCE.md) | Project governance |

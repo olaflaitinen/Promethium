@@ -1,45 +1,178 @@
-# AI/ML Pipelines & Models 🧠
+# ML Pipelines
 
-Promethium implements state-of-the-art architectures tailored for seismic signal processing.
+This document covers state-of-the-art machine learning architectures, training, and inference in Promethium. Developed in December 2025, the framework incorporates cutting-edge deep learning approaches for seismic reconstruction.
 
-## Model Families
+## Model Architectures
 
-All models inherit from `PromethiumModel` and are instantiated via the `ModelRegistry`.
+### U-Net
 
-### 1. U-Net (Reconstruction & Inpainting)
-*   **Purpose**: General-purpose signal recovery, missing trace interpolation.
-*   **Architecture**: Encoder-Decoder with skip connections.
-*   **SoTA Features**:
-    *   Residual Blocks in encoder/decoder.
-    *   Optional Attention Gates for focusing on wavefronts.
-    *   Support for 1D (Trace), 2D (Gather), and 3D (Cube) inputs.
+The state-of-the-art U-Net architecture is the primary model for seismic trace reconstruction with encoder-decoder structure and skip connections.
 
-### 2. Autoencoder (Denoising)
-*   **Purpose**: Suppressing random and coherent noise.
-*   **Architecture**: Deep Convolutional Autoencoder (DAE).
-*   **Mechanism**: Compresses input to a latent representation, filtering out high-frequency noise that doesn't fit the learned manifold of valid seismic signals.
+**Configuration:**
 
-### 3. PINN (Physics-Informed)
-*   **Purpose**: Ensuring physical consistency of reconstructions.
-*   **Mechanism**: Adds a "Physics Loss" term to the standard objective.
-*   **Equation**: Acoustic Wave Equation $u_{tt} = c^2 \nabla^2 u$.
-*   **Implementation**: `WaveEquationLoss` in `src/promethium/ml/loss.py` uses finite-difference kernels to penalize violations of the wave equation.
+```yaml
+model:
+  architecture: unet
+  params:
+    in_channels: 1
+    out_channels: 1
+    features: [64, 128, 256, 512]
+    bottleneck: 1024
+    dropout: 0.1
+```
+
+**Variants:**
+- **Attention U-Net**: Attention gates at skip connections
+- **Residual U-Net**: Residual blocks for better gradient flow
+
+### Variational Autoencoder (VAE)
+
+Probabilistic model for uncertainty-aware reconstruction.
+
+```yaml
+model:
+  architecture: vae
+  params:
+    latent_dim: 256
+    encoder_features: [64, 128, 256]
+    beta: 1.0
+```
+
+### GAN
+
+Adversarial training for high-fidelity reconstruction.
+
+```yaml
+model:
+  architecture: gan
+  params:
+    generator:
+      architecture: unet
+    discriminator:
+      architecture: patchgan
+    adversarial_weight: 0.01
+```
+
+### Physics-Informed Neural Network (PINN)
+
+State-of-the-art PINN architecture incorporates wave equation constraints into training, representing cutting-edge scientific machine learning.
+
+```mermaid
+flowchart TB
+    subgraph PINN["Physics-Informed Neural Network"]
+        IN[Input Data] --> BB[Backbone Network]
+        BB --> DATA_LOSS[Data Loss]
+        BB --> PHYS[Physics Loss<br/>Wave Equation]
+        DATA_LOSS --> TOTAL[Total Loss]
+        PHYS --> TOTAL
+        TOTAL --> OPT[Optimizer]
+    end
+```
+
+```yaml
+model:
+  architecture: pinn
+  params:
+    backbone: unet
+    physics_weight: 0.1
+    wave_equation: acoustic
+```
+
+---
 
 ## Training Pipeline
 
-The training process is standardized via `src/promethium/ml/train.py`.
+### Data Preparation
 
-1.  **Config**: Hydrated from YAML or API Request.
-2.  **Data Loading**: 
-    *   `SeismicDataset` lazily reads Zarr chunks.
-    *   **Augmentation**: Random Polarity Flip, Gain, Time Shift applied on-the-fly (`transforms.py`).
-3.  **Loop**: PyTorch Lightning handles Epochs, Validation, and Checkpointing.
-4.  **Logging**: Matrices pushed to MLFlow/Tensorboard.
+```yaml
+data:
+  train_path: /data/train/
+  val_path: /data/val/
+  patch_size: 256
+  stride: 128
+  augmentation:
+    enable: true
+    noise_std: 0.01
+```
+
+### Training Configuration
+
+```yaml
+training:
+  epochs: 100
+  batch_size: 16
+  optimizer:
+    type: adamw
+    learning_rate: 1e-4
+  scheduler:
+    type: reduce_on_plateau
+    factor: 0.5
+    patience: 10
+  mixed_precision: true
+```
+
+### Distributed Training
+
+```bash
+torchrun --nproc_per_node=4 train.py --config config.yaml
+```
+
+---
 
 ## Inference Pipeline
 
-Inference (`src/promethium/ml/inference.py`) is designed for production scale.
+### Patch-Based Inference
 
-*   **Patch-Based**: Large volumes are broken into overlapping patches (e.g., 128x128).
-*   **Cosine Blending**: Overlapping regions are blended using a cosine window to eliminate blocking artifacts at patch boundaries.
-*   **Batched**: Patches are batched for maximum GPU throughput.
+Large inputs are processed as overlapping patches with cosine-weighted blending.
+
+```yaml
+inference:
+  batch_size: 8
+  patch_size: 256
+  overlap: 0.5
+  device: cuda
+  precision: float16
+```
+
+### Ensemble Inference
+
+```yaml
+inference:
+  ensemble_size: 5
+  dropout_inference: true
+  aggregate: mean
+```
+
+---
+
+## Evaluation Metrics
+
+| Metric | Description | Range |
+|--------|-------------|-------|
+| SNR Improvement | SNR gain in dB | Higher better |
+| SSIM | Structural Similarity | [0, 1] |
+| MSE | Mean Squared Error | Lower better |
+| Coherence | Cross-correlation | [0, 1] |
+
+---
+
+## Model Registry
+
+Models are tracked with MLflow:
+
+```python
+import mlflow
+
+with mlflow.start_run():
+    mlflow.log_params(config)
+    mlflow.pytorch.log_model(model, "model")
+```
+
+---
+
+## Related Documents
+
+| Document | Description |
+|----------|-------------|
+| [Data Engineering](data-engineering.md) | Data pipeline documentation |
+| [Benchmarking](benchmarking.md) | Performance evaluation |

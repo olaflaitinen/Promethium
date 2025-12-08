@@ -1,0 +1,32 @@
+# Promethium Production Configuration
+# Overrides for production deployment
+
+database:
+  pool_size: 20
+  max_overflow: 40
+
+api:
+  debug: false
+  rate_limit:
+    enabled: true
+    requests_per_minute: 120
+
+auth:
+  access_token_expire_minutes: 15
+
+ml:
+  device: cuda
+  inference:
+    batch_size: 16
+    precision: float16
+
+workers:
+  concurrency: 8
+  prefetch_multiplier: 4
+
+logging:
+  level: INFO
+  format: json
+
+metrics:
+  enabled: true

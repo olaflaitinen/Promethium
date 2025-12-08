@@ -1,0 +1,29 @@
+# Promethium Development Configuration
+# Overrides for local development environment
+
+database:
+  host: localhost
+  port: 5432
+  name: promethium_dev
+
+redis:
+  host: localhost
+  port: 6379
+
+api:
+  debug: true
+  cors_origins:
+    - http://localhost:4200
+    - http://127.0.0.1:4200
+
+ml:
+  device: auto
+  inference:
+    precision: float32
+
+logging:
+  level: DEBUG
+  format: pretty
+
+metrics:
+  enabled: false

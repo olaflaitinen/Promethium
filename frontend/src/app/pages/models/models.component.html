@@ -1,0 +1,111 @@
+<div class="models-page">
+    <div class="page-header">
+        <div>
+            <h1>Models</h1>
+            <p class="subtitle">AI/ML models for seismic data reconstruction</p>
+        </div>
+        <div class="actions-bar">
+            <button class="pm-btn pm-btn-secondary" (click)="loadModels()">
+                <span class="pm-icon" [innerHTML]="icons.refresh"></span>
+                Refresh
+            </button>
+        </div>
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading-state" *ngIf="loading">
+        <div class="spinner"></div>
+        <p>Loading models...</p>
+    </div>
+
+    <!-- Error State -->
+    <div class="error-state pm-card" *ngIf="error && !loading">
+        <span class="error-icon" [innerHTML]="icons.alertCircle"></span>
+        <p>{{ error }}</p>
+        <button class="pm-btn pm-btn-secondary" (click)="loadModels()">Retry</button>
+    </div>
+
+    <!-- Models Grid -->
+    <div class="models-grid" *ngIf="!loading && !error && models.length > 0">
+        <div class="model-card pm-card" *ngFor="let model of models">
+            <div class="model-header">
+                <div class="model-icon" [innerHTML]="icons.brain"></div>
+                <div class="model-info">
+                    <h3 class="model-name">{{ model.name }}</h3>
+                    <div class="model-meta">
+                        <span class="model-type">{{ getModelTypeLabel(model.type) }}</span>
+                        <span class="model-version">v{{ model.version }}</span>
+                    </div>
+                </div>
+                <span class="pm-badge" [ngClass]="getStatusBadgeClass(model.status)">
+                    {{ model.status }}
+                </span>
+            </div>
+
+            <div class="model-architecture">
+                <span class="arch-label">Architecture:</span>
+                <span class="arch-value">{{ model.architecture }}</span>
+            </div>
+
+            <div class="model-metrics" *ngIf="model.metrics">
+                <div class="metrics-header">Performance Metrics</div>
+                <div class="metrics-grid">
+                    <div class="metric" *ngIf="model.metrics.snr !== undefined">
+                        <span class="metric-value">{{ formatMetric(model.metrics.snr, 1) }}</span>
+                        <span class="metric-label">SNR (dB)</span>
+                    </div>
+                    <div class="metric" *ngIf="model.metrics.psnr !== undefined">
+                        <span class="metric-value">{{ formatMetric(model.metrics.psnr, 1) }}</span>
+                        <span class="metric-label">PSNR</span>
+                    </div>
+                    <div class="metric" *ngIf="model.metrics.ssim !== undefined">
+                        <span class="metric-value">{{ formatMetric(model.metrics.ssim, 2) }}</span>
+                        <span class="metric-label">SSIM</span>
+                    </div>
+                    <div class="metric" *ngIf="model.metrics.mse !== undefined">
+                        <span class="metric-value">{{ formatMetric(model.metrics.mse, 4) }}</span>
+                        <span class="metric-label">MSE</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="model-actions">
+                <button class="pm-btn pm-btn-sm pm-btn-secondary">
+                    <span class="pm-icon pm-icon-sm" [innerHTML]="icons.eye"></span>
+                    Details
+                </button>
+                <button class="pm-btn pm-btn-sm pm-btn-primary" [disabled]="model.status !== 'ready'">
+                    <span class="pm-icon pm-icon-sm" [innerHTML]="icons.play"></span>
+                    Run Inference
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state pm-card" *ngIf="!loading && !error && models.length === 0">
+        <span class="empty-icon" [innerHTML]="icons.brain"></span>
+        <h3>No Models Available</h3>
+        <p>Train a new model or import an existing one to get started.</p>
+    </div>
+
+    <!-- Model Types Info -->
+    <div class="info-section" *ngIf="!loading && models.length > 0">
+        <h2>Supported Model Architectures</h2>
+        <div class="info-grid">
+            <div class="info-card pm-card">
+                <h4>U-Net</h4>
+                <p>Encoder-decoder architecture with skip connections, ideal for seismic denoising and segmentation
+                    tasks.</p>
+            </div>
+            <div class="info-card pm-card">
+                <h4>Autoencoder</h4>
+                <p>Latent space representations for noise reduction and trace interpolation.</p>
+            </div>
+            <div class="info-card pm-card">
+                <h4>GAN</h4>
+                <p>Generative adversarial networks for high-fidelity signal reconstruction and enhancement.</p>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,90 @@
+<div class="docs-page">
+    <div class="page-header">
+        <h1>Documentation</h1>
+        <p class="subtitle">Guides, tutorials, and API reference for Promethium</p>
+    </div>
+
+    <!-- Quick Start Banner -->
+    <div class="quick-start-banner pm-card">
+        <div class="banner-icon" [innerHTML]="icons.zap"></div>
+        <div class="banner-content">
+            <h2>Quick Start</h2>
+            <p>Get up and running with Promethium in just a few steps. Upload a dataset, select a model, and run your
+                first reconstruction pipeline.</p>
+        </div>
+        <a href="#" class="pm-btn pm-btn-primary">
+            Start Tutorial
+            <span class="pm-icon" [innerHTML]="icons.chevronRight"></span>
+        </a>
+    </div>
+
+    <!-- Documentation Sections -->
+    <div class="docs-grid">
+        <div class="doc-section pm-card" *ngFor="let section of docSections">
+            <div class="section-header">
+                <span class="section-icon" [innerHTML]="getIcon(section.icon)"></span>
+                <h3>{{ section.title }}</h3>
+            </div>
+            <ul class="doc-list">
+                <li *ngFor="let item of section.items">
+                    <a [href]="item.href" class="doc-link"
+                        [attr.target]="item.href.startsWith('http') ? '_blank' : null">
+                        <div class="doc-link-content">
+                            <span class="doc-name">{{ item.name }}</span>
+                            <span class="doc-desc">{{ item.description }}</span>
+                        </div>
+                        <span class="doc-arrow" [innerHTML]="icons.chevronRight"></span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Additional Resources -->
+    <div class="resources-section">
+        <h2>Additional Resources</h2>
+        <div class="resources-grid">
+            <a href="https://github.com/olaflaitinen/Promethium" target="_blank" class="resource-card pm-card">
+                <span class="resource-icon" [innerHTML]="icons.externalLink"></span>
+                <div class="resource-content">
+                    <span class="resource-title">GitHub Repository</span>
+                    <span class="resource-desc">Source code and issue tracker</span>
+                </div>
+            </a>
+            <a href="http://localhost:8000/docs" target="_blank" class="resource-card pm-card">
+                <span class="resource-icon" [innerHTML]="icons.server"></span>
+                <div class="resource-content">
+                    <span class="resource-title">Interactive API Docs</span>
+                    <span class="resource-desc">Swagger UI for API testing</span>
+                </div>
+            </a>
+            <a href="#" class="resource-card pm-card">
+                <span class="resource-icon" [innerHTML]="icons.help"></span>
+                <div class="resource-content">
+                    <span class="resource-title">FAQ</span>
+                    <span class="resource-desc">Frequently asked questions</span>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- About Section -->
+    <div class="about-section pm-card">
+        <h2>About Promethium</h2>
+        <p>
+            Promethium is an advanced seismic data recovery and reconstruction framework that leverages state-of-the-art
+            AI/ML algorithms.
+            It provides production-grade tools for processing, denoising, and reconstructing seismic data using
+            architectures including
+            U-Net variants, autoencoders, and generative adversarial networks.
+        </p>
+        <div class="tech-stack">
+            <span class="tech-badge">Python</span>
+            <span class="tech-badge">FastAPI</span>
+            <span class="tech-badge">PyTorch</span>
+            <span class="tech-badge">Angular</span>
+            <span class="tech-badge">PostgreSQL</span>
+            <span class="tech-badge">Celery</span>
+        </div>
+    </div>
+</div>

@@ -1,61 +1,38 @@
-.model-cards {
+/* Job Submission Styles */
+
+.page-header {
     display: flex;
-    gap: 16px;
-    margin-top: 8px;
+    justify-content: space-between;
+    align-items: center;
 }
 
-.model-card {
-    flex: 1;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--pm-border);
-    border-radius: 8px;
-    padding: 16px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.2s;
+.jobs-container {
+    padding: 0;
+    overflow: hidden;
 }
 
-.model-card:hover,
-.model-card.selected {
-    background: rgba(0, 240, 255, 0.1);
-    border-color: var(--pm-accent-cyan);
-    box-shadow: var(--pm-glow-cyan);
+.table-responsive {
+    overflow-x: auto;
 }
 
-.model-icon {
-    font-size: 24px;
-    margin-bottom: 8px;
+.pm-table td {
+    vertical-align: middle;
 }
 
-.model-card h3 {
-    font-size: 14px;
-    margin-bottom: 4px;
-    color: white;
+.uk-text-monospace {
+    font-family: var(--font-code);
 }
 
-.model-card p {
-    font-size: 12px;
-    margin: 0;
-}
-
+/* Modal Specifics */
 .param-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--pm-space-md);
 }
 
-.form-group {
-    margin-bottom: 24px;
-}
-
-.form-group label {
+.sub-label {
     display: block;
-    margin-bottom: 8px;
-    color: var(--pm-text-secondary);
-    font-size: 14px;
-}
-
-.form-actions {
-    display: flex;
-    justify-content: flex-end;
+    font-size: 12px;
+    color: var(--pm-text-muted);
+    margin-bottom: 4px;
 }

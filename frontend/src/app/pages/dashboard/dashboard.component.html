@@ -1,47 +1,137 @@
-<div class="dashboard-header">
-    <h1>System Overview</h1>
-    <div class="date-display">{{ today | date:'mediumDate' }}</div>
-</div>
+<div class="dashboard">
+    <!-- Header Section -->
+    <div class="page-header">
+        <div class="header-content">
+            <h1>Dashboard</h1>
+            <p class="subtitle">Seismic Data Recovery and Reconstruction Platform</p>
+        </div>
+        <div class="health-indicator" *ngIf="health">
+            <span class="health-dot" [class.healthy]="health.status === 'ok'"
+                [class.degraded]="health.status === 'degraded'" [class.error]="health.status === 'error'"></span>
+            <span class="health-text">{{ health.status === 'ok' ? 'All Systems Operational' : health.status ===
+                'degraded' ? 'Degraded Performance' : 'System Offline' }}</span>
+        </div>
+    </div>
 
-<div class="stats-grid">
-    <div class="pm-card stat-card">
-        <div class="stat-icon">💾</div>
-        <div class="stat-value">124 TB</div>
-        <div class="stat-label">Data Managed</div>
+    <!-- Intro Section -->
+    <div class="intro-section pm-card">
+        <div class="intro-content">
+            <h2>Welcome to Promethium</h2>
+            <p>Promethium is an advanced framework for seismic data recovery and reconstruction, leveraging
+                state-of-the-art AI/ML algorithms including U-Net architectures, autoencoders, and GANs. Process,
+                denoise, and reconstruct seismic data with production-grade reliability.</p>
+        </div>
+        <div class="intro-actions">
+            <a routerLink="/datasets" class="pm-btn pm-btn-primary">
+                <span class="pm-icon" [innerHTML]="icons.upload"></span>
+                Ingest Dataset
+            </a>
+            <a routerLink="/jobs" class="pm-btn pm-btn-secondary">
+                <span class="pm-icon" [innerHTML]="icons.zap"></span>
+                Start Pipeline
+            </a>
+            <a routerLink="/models" class="pm-btn pm-btn-secondary">
+                <span class="pm-icon" [innerHTML]="icons.brain"></span>
+                View Models
+            </a>
+        </div>
     </div>
-    <div class="pm-card stat-card">
-        <div class="stat-icon">⚡</div>
-        <div class="stat-value">8</div>
-        <div class="stat-label">Active Jobs</div>
-    </div>
-    <div class="pm-card stat-card">
-        <div class="stat-icon">🧠</div>
-        <div class="stat-value">4</div>
-        <div class="stat-label">Models Online</div>
-    </div>
-    <div class="pm-card stat-card">
-        <div class="stat-icon">✅</div>
-        <div class="stat-value">99.9%</div>
-        <div class="stat-label">Uptime</div>
-    </div>
-</div>
 
-<div class="recent-activity-section">
-    <h2>Recent Activity</h2>
-    <div class="pm-card activity-list">
-        <div class="activity-item">
-            <span class="status-indicator running"></span>
-            <div class="activity-details">
-                <span class="activity-title">Training: UNet-Denoise-V4</span>
-                <span class="activity-meta">Started 2h ago by @admin</span>
+    <!-- Loading State -->
+    <div class="loading-state" *ngIf="loading">
+        <div class="spinner"></div>
+        <p>Loading dashboard data...</p>
+    </div>
+
+    <!-- Error State -->
+    <div class="error-state pm-card" *ngIf="error && !loading">
+        <span class="error-icon" [innerHTML]="icons.alertCircle"></span>
+        <p>{{ error }}</p>
+        <button class="pm-btn pm-btn-secondary" (click)="loadDashboardData()">Retry</button>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid" *ngIf="stats && !loading">
+        <div class="stat-card pm-card">
+            <div class="stat-icon" [innerHTML]="icons.database"></div>
+            <div class="stat-content">
+                <div class="stat-value">{{ stats.datasets_count }}</div>
+                <div class="stat-label">Datasets</div>
             </div>
         </div>
-        <div class="activity-item">
-            <span class="status-indicator completed"></span>
-            <div class="activity-details">
-                <span class="activity-title">Inference: Gulf_Block_A</span>
-                <span class="activity-meta">Completed yesterday</span>
+        <div class="stat-card pm-card">
+            <div class="stat-icon running" [innerHTML]="icons.zap"></div>
+            <div class="stat-content">
+                <div class="stat-value">{{ stats.active_jobs }}</div>
+                <div class="stat-label">Active Jobs</div>
             </div>
+        </div>
+        <div class="stat-card pm-card">
+            <div class="stat-icon" [innerHTML]="icons.brain"></div>
+            <div class="stat-content">
+                <div class="stat-value">{{ stats.models_count }}</div>
+                <div class="stat-label">Models Ready</div>
+            </div>
+        </div>
+        <div class="stat-card pm-card">
+            <div class="stat-icon success" [innerHTML]="icons.checkCircle"></div>
+            <div class="stat-content">
+                <div class="stat-value">{{ stats.uptime_percent }}%</div>
+                <div class="stat-label">Uptime</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="activity-section" *ngIf="!loading">
+        <div class="section-header">
+            <h2>Recent Activity</h2>
+            <a routerLink="/jobs" class="view-all-link">View all jobs</a>
+        </div>
+        <div class="pm-card activity-list" *ngIf="activities.length > 0">
+            <div class="activity-item" *ngFor="let activity of activities">
+                <span class="activity-status" [ngClass]="getStatusClass(activity.status)"></span>
+                <div class="activity-content">
+                    <div class="activity-title">{{ activity.title }}</div>
+                    <div class="activity-meta">{{ activity.description }} - {{ getTimeAgo(activity.timestamp) }}</div>
+                </div>
+                <span class="activity-type pm-badge pm-badge-neutral">{{ activity.type }}</span>
+            </div>
+        </div>
+        <div class="empty-state pm-card" *ngIf="activities.length === 0">
+            <span class="empty-icon" [innerHTML]="icons.activity"></span>
+            <h3>No Recent Activity</h3>
+            <p>Start by uploading a dataset or running a pipeline job.</p>
+        </div>
+    </div>
+
+    <!-- Quick Links -->
+    <div class="quick-links" *ngIf="!loading">
+        <div class="section-header">
+            <h2>Quick Access</h2>
+        </div>
+        <div class="links-grid">
+            <a routerLink="/docs" class="quick-link-card pm-card">
+                <span class="link-icon" [innerHTML]="icons.book"></span>
+                <div class="link-content">
+                    <div class="link-title">Documentation</div>
+                    <div class="link-desc">User guides and API reference</div>
+                </div>
+            </a>
+            <a routerLink="/system" class="quick-link-card pm-card">
+                <span class="link-icon" [innerHTML]="icons.server"></span>
+                <div class="link-content">
+                    <div class="link-title">System Status</div>
+                    <div class="link-desc">Monitor workers and resources</div>
+                </div>
+            </a>
+            <a routerLink="/results" class="quick-link-card pm-card">
+                <span class="link-icon" [innerHTML]="icons.barChart"></span>
+                <div class="link-content">
+                    <div class="link-title">Results Analysis</div>
+                    <div class="link-desc">View reconstruction outputs</div>
+                </div>
+            </a>
         </div>
     </div>
 </div>

@@ -1,54 +1,89 @@
-<div class="page-header">
-    <h1>Data Visualization</h1>
-    <p>Interactive seismic viewer and quality control.</p>
-</div>
+<div class="viz-page">
+    <div class="page-header">
+        <h1>Interactive Visualization</h1>
+        <p class="subtitle">Deep dive detailed analysis of seismic data</p>
+    </div>
 
-<div class="viz-container pm-card">
-    <div class="viz-toolbar">
-        <div class="toolbar-group">
-            <label>Display Mode</label>
-            <div class="btn-group">
-                <button class="pm-btn pm-btn-sm active">Wiggle</button>
-                <button class="pm-btn pm-btn-sm">Density</button>
-                <button class="pm-btn pm-btn-sm">Spectra</button>
+    <!-- Main Workspace -->
+    <div class="workspace">
+
+        <!-- Sidebar Controls -->
+        <div class="controls-sidebar pm-card">
+            <div class="sidebar-section">
+                <h3>Data Source</h3>
+                <div class="pm-form-group">
+                    <label class="pm-label">Dataset</label>
+                    <select class="pm-select" [(ngModel)]="controls.datasetId" (change)="renderPlaceholder()">
+                        <option *ngFor="let ds of datasets" [ngValue]="ds.id">{{ ds.name }}</option>
+                    </select>
+                </div>
+                <div class="pm-form-group">
+                    <label class="pm-label">Overlay Job</label>
+                    <select class="pm-select" [(ngModel)]="controls.jobId">
+                        <option value="">None (Raw Data)</option>
+                        <option *ngFor="let job of jobs" [value]="job.id">{{ job.algorithm }} ({{ job.status }})
+                        </option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <h3>Display</h3>
+                <div class="pm-form-group">
+                    <label class="pm-label">View Mode</label>
+                    <div class="mode-toggles">
+                        <button class="mode-btn" [class.active]="controls.viewMode === 'waveform'"
+                            (click)="controls.viewMode = 'waveform'; renderPlaceholder()">
+                            <span class="mode-icon" [innerHTML]="icons.waveform"></span>
+                        </button>
+                        <button class="mode-btn" [class.active]="controls.viewMode === 'spectrogram'"
+                            (click)="controls.viewMode = 'spectrogram'; renderPlaceholder()">
+                            <span class="mode-icon" [innerHTML]="icons.layers"></span>
+                        </button>
+                    </div>
+                </div>
+                <div class="pm-form-group">
+                    <label class="pm-label">Gain: {{ controls.gain }}</label>
+                    <input type="range" class="pm-range" min="0.1" max="5.0" step="0.1" [(ngModel)]="controls.gain"
+                        (input)="renderPlaceholder()">
+                </div>
+                <div class="pm-form-group">
+                    <label class="toggle-row">
+                        <span>Show Grid</span>
+                        <label class="toggle">
+                            <input type="checkbox" [(ngModel)]="controls.showGrid" (change)="renderPlaceholder()">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </label>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <button class="pm-btn pm-btn-primary full-width" (click)="renderPlaceholder()">
+                    <span class="pm-icon" [innerHTML]="icons.refresh"></span>
+                    Update View
+                </button>
+                <button class="pm-btn pm-btn-secondary full-width" style="margin-top: 8px;">
+                    <span class="pm-icon" [innerHTML]="icons.download"></span>
+                    Export Image
+                </button>
             </div>
         </div>
 
-        <div class="toolbar-group">
-            <label>Gain (dB)</label>
-            <input type="range" class="pm-input-range" min="-10" max="10" value="0">
-        </div>
-
-        <div class="toolbar-group">
-            <label>Color Scale</label>
-            <select class="pm-input pm-input-sm">
-                <option>Greyscale</option>
-                <option>Red-Blue</option>
-                <option>Viridis</option>
-            </select>
-        </div>
-    </div>
-
-    <div class="viz-canvas-area" id="seismicCanvas">
-        <!-- 
-      In a real implementation, this would be a canvas element managed by 
-      a library like D3.js, Plotly.js, or WebGL shader.
-      For the prototype, we show a placeholder indicating the capability.
-    -->
-        <div class="placeholder-viz">
-            <div class="trace-lines"></div>
-            <span class="viz-msg">WebGL Context Initialized - Rendering 2,048 Traces</span>
-        </div>
-    </div>
-
-    <div class="viz-footer">
-        <div class="viz-info">
-            <span>Time: 0 - 4000ms</span>
-            <span>Xline: 1024</span>
-            <span>Inline: 512</span>
-        </div>
-        <div class="viz-cursor">
-            Cursor: T=1240ms, Amp=0.45
+        <!-- Canvas Area -->
+        <div class="canvas-container pm-card">
+            <div class="canvas-wrapper">
+                <canvas #seismicCanvas></canvas>
+            </div>
+            <div class="canvas-toolbar">
+                <div class="tool-group">
+                    <button class="icon-btn" title="Zoom In"><span [innerHTML]="icons.plus"></span></button>
+                    <button class="icon-btn" title="Zoom Out"><span [innerHTML]="icons.search"></span></button>
+                </div>
+                <div class="tool-group">
+                    <span class="status-text">X: 1240 | Y: 350 | Amp: 0.45</span>
+                </div>
+            </div>
         </div>
     </div>
 </div>

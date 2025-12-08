@@ -1,6 +1,13 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { Icons } from './shared/icons';
+
+interface NavItem {
+    path: string;
+    label: string;
+    icon: string;
+}
 
 @Component({
     selector: 'app-root',
@@ -11,4 +18,19 @@ import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 })
 export class AppComponent {
     title = 'Promethium';
+    appVersion = '1.0.0';
+
+    mainNavItems: NavItem[] = [
+        { path: '/dashboard', label: 'Dashboard', icon: Icons.dashboard },
+        { path: '/datasets', label: 'Datasets', icon: Icons.database },
+        { path: '/jobs', label: 'Pipelines', icon: Icons.zap },
+        { path: '/models', label: 'Models', icon: Icons.brain },
+        { path: '/results', label: 'Results', icon: Icons.barChart },
+    ];
+
+    secondaryNavItems: NavItem[] = [
+        { path: '/system', label: 'System', icon: Icons.server },
+        { path: '/docs', label: 'Documentation', icon: Icons.book },
+        { path: '/settings', label: 'Settings', icon: Icons.settings },
+    ];
 }

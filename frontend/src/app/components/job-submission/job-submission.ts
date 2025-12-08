@@ -1,7 +1,7 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ApiService, Dataset } from '../../services/api.service';
+import { ApiService, Dataset, JobCreate } from '../../services/api.service';
 import { Router } from '@angular/router';
 
 @Component({
@@ -59,7 +59,12 @@ export class JobSubmissionComponent implements OnInit {
     if (!this.selectedDatasetId) return;
     try {
       const params = JSON.parse(this.paramsJson);
-      this.api.submitJob(this.selectedDatasetId, this.algorithm, params).subscribe(() => {
+      const jobCreate: JobCreate = {
+        dataset_id: this.selectedDatasetId,
+        algorithm: this.algorithm,
+        params: params
+      };
+      this.api.createJob(jobCreate).subscribe(() => {
         this.router.navigate(['/jobs']);
       });
     } catch (e) {
@@ -67,3 +72,4 @@ export class JobSubmissionComponent implements OnInit {
     }
   }
 }
+

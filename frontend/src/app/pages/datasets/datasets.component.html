@@ -1,0 +1,138 @@
+<div class="datasets-page">
+    <div class="page-header">
+        <div>
+            <h1>Datasets</h1>
+            <p class="subtitle">Manage and ingest seismic data files</p>
+        </div>
+        <div class="actions-bar">
+            <button class="pm-btn pm-btn-secondary" (click)="refreshDatasets()">
+                <span class="pm-icon" [innerHTML]="icons.refresh"></span>
+                Refresh
+            </button>
+            <button class="pm-btn pm-btn-primary" (click)="showUploadModal = true">
+                <span class="pm-icon" [innerHTML]="icons.upload"></span>
+                Upload Dataset
+            </button>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-bar pm-card" *ngIf="datasets.length > 0">
+        <div class="search-input-wrapper">
+            <span class="search-icon" [innerHTML]="icons.search"></span>
+            <input type="text" class="pm-input search-input" placeholder="Search datasets..." [(ngModel)]="searchTerm">
+        </div>
+        <div class="filter-count">
+            {{ filteredDatasets.length }} dataset{{ filteredDatasets.length !== 1 ? 's' : '' }}
+        </div>
+    </div>
+
+    <!-- Datasets Table -->
+    <div class="datasets-container pm-card">
+        <div class="loading-state" *ngIf="loading">
+            <div class="spinner"></div>
+            <p>Loading datasets...</p>
+        </div>
+
+        <div class="error-state" *ngIf="error && !loading">
+            <span class="error-icon" [innerHTML]="icons.alertCircle"></span>
+            <p>{{ error }}</p>
+            <button class="pm-btn pm-btn-secondary" (click)="refreshDatasets()">Retry</button>
+        </div>
+
+        <div class="empty-state" *ngIf="!loading && !error && datasets.length === 0">
+            <span class="empty-icon" [innerHTML]="icons.database"></span>
+            <h3>No Datasets Found</h3>
+            <p>Upload your first seismic dataset to get started.</p>
+        </div>
+
+        <div class="table-responsive" *ngIf="!loading && !error && datasets.length > 0">
+            <table class="pm-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Format</th>
+                        <th>Upload Time</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let dataset of filteredDatasets">
+                        <td>{{ dataset.id }}</td>
+                        <td>
+                            <div class="dataset-name-cell">
+                                <span class="file-icon" [innerHTML]="icons.file"></span>
+                                {{ dataset.name }}
+                            </div>
+                        </td>
+                        <td><span class="pm-badge pm-badge-info">{{ dataset.format | uppercase }}</span></td>
+                        <td>{{ dataset.upload_time | date:'medium' }}</td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="pm-btn pm-btn-ghost pm-btn-sm" (click)="viewDataset(dataset)"
+                                    title="View Details">
+                                    <span class="pm-icon" [innerHTML]="icons.eye"></span>
+                                </button>
+                                <button class="pm-btn pm-btn-ghost pm-btn-sm text-error"
+                                    (click)="deleteDataset(dataset.id)" title="Delete">
+                                    <span class="pm-icon" [innerHTML]="icons.trash"></span>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Upload Modal -->
+<div class="modal-overlay" *ngIf="showUploadModal" (click)="showUploadModal = false">
+    <div class="modal-content pm-card" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+            <h2>Upload Dataset</h2>
+            <button class="modal-close" (click)="showUploadModal = false">
+                <span [innerHTML]="icons.x"></span>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="pm-form-group">
+                <label class="pm-label">Dataset Name</label>
+                <input type="text" class="pm-input" [(ngModel)]="uploadName" placeholder="Enter dataset name">
+            </div>
+
+            <div class="pm-form-group">
+                <label class="pm-label">Format</label>
+                <select class="pm-select" [(ngModel)]="uploadFormat">
+                    <option value="segy">SEG-Y</option>
+                    <option value="seg2">SEG-2</option>
+                    <option value="miniseed">miniSEED</option>
+                    <option value="sac">SAC</option>
+                </select>
+            </div>
+
+            <div class="pm-form-group">
+                <label class="pm-label">File</label>
+                <div class="file-drop-zone" [class.has-file]="!!selectedFile" (dragover)="$event.preventDefault()"
+                    (drop)="onFileDrop($event)">
+                    <input type="file" id="fileInput" (change)="onFileSelect($event)" hidden>
+                    <label for="fileInput" class="file-label">
+                        <span class="drop-icon" [innerHTML]="icons.upload"></span>
+                        <span class="drop-text">{{ selectedFile ? selectedFile.name : 'Click or drag file here'
+                            }}</span>
+                        <span class="drop-sub" *ngIf="!selectedFile">Supported formats: .sgy, .seg2, .mseed, .sac</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="pm-btn pm-btn-secondary" (click)="showUploadModal = false">Cancel</button>
+            <button class="pm-btn pm-btn-primary" (click)="uploadDataset()" [disabled]="!canUpload() || submitting">
+                <span class="pm-icon" [innerHTML]="icons.upload" *ngIf="!submitting"></span>
+                <div class="spinner-sm" *ngIf="submitting"></div>
+                {{ submitting ? 'Uploading...' : 'Upload' }}
+            </button>
+        </div>
+    </div>
+</div>

@@ -33,3 +33,7 @@ class CoreLogger:
 
 def get_logger(name: str) -> CoreLogger:
     return CoreLogger(name)
+
+# Module-level logger instance for convenience
+logger = get_logger("promethium")
+

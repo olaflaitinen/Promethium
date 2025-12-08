@@ -45,4 +45,28 @@ app.include_router(ml.router, prefix=settings.API_PREFIX)
 
 @app.get("/health")
 async def health_check():
-    return {"status": "ok", "version": settings.APP_VERSION}
+    """
+    System health check endpoint.
+    Returns status of all system components.
+    """
+    status = "ok"
+    db_status = "connected"
+    
+    # Database connectivity check
+    try:
+        async with engine.begin() as conn:
+            await conn.execute("SELECT 1")
+    except Exception as e:
+        logger.error(f"Database health check failed: {e}")
+        db_status = "disconnected"
+        status = "degraded"
+    
+    return {
+        "status": status,
+        "version": settings.APP_VERSION,
+        "database": db_status,
+        "components": {
+            "api": "running",
+            "database": db_status
+        }
+    }

@@ -1,0 +1,150 @@
+<div class="settings-page">
+    <div class="page-header">
+        <h1>Settings</h1>
+        <p class="subtitle">Configure your Promethium instance</p>
+    </div>
+
+    <div class="settings-grid">
+        <!-- General Settings -->
+        <section class="settings-section pm-card">
+            <h2>
+                <span class="section-icon" [innerHTML]="icons.settings"></span>
+                General
+            </h2>
+            <div class="settings-group">
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <label>Dark Mode</label>
+                        <span class="setting-description">Enable dark mode theme</span>
+                    </div>
+                    <label class="toggle">
+                        <input type="checkbox" [(ngModel)]="settings.darkMode">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <label>Notifications</label>
+                        <span class="setting-description">Show desktop notifications for job status</span>
+                    </div>
+                    <label class="toggle">
+                        <input type="checkbox" [(ngModel)]="settings.notifications">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <label>Auto-refresh</label>
+                        <span class="setting-description">Automatically refresh job status</span>
+                    </div>
+                    <label class="toggle">
+                        <input type="checkbox" [(ngModel)]="settings.autoRefresh">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+        </section>
+
+        <!-- API Settings -->
+        <section class="settings-section pm-card">
+            <h2>
+                <span class="section-icon" [innerHTML]="icons.server"></span>
+                API Configuration
+            </h2>
+            <div class="settings-group">
+                <div class="pm-form-group">
+                    <label class="pm-label">Backend URL</label>
+                    <input type="text" class="pm-input" [(ngModel)]="settings.apiUrl"
+                        placeholder="http://localhost:8000">
+                </div>
+                <div class="pm-form-group">
+                    <label class="pm-label">API Timeout (seconds)</label>
+                    <input type="number" class="pm-input" [(ngModel)]="settings.apiTimeout" min="5" max="300">
+                </div>
+            </div>
+        </section>
+
+        <!-- ML Settings -->
+        <section class="settings-section pm-card">
+            <h2>
+                <span class="section-icon" [innerHTML]="icons.brain"></span>
+                Machine Learning
+            </h2>
+            <div class="settings-group">
+                <div class="pm-form-group">
+                    <label class="pm-label">Default Model</label>
+                    <select class="pm-select" [(ngModel)]="settings.defaultModel">
+                        <option value="unet-v2">U-Net V2 (Recommended)</option>
+                        <option value="unet-attention">Attention U-Net</option>
+                        <option value="vae">Variational Autoencoder</option>
+                        <option value="pinn">Physics-Informed NN</option>
+                    </select>
+                </div>
+                <div class="pm-form-group">
+                    <label class="pm-label">Compute Device</label>
+                    <select class="pm-select" [(ngModel)]="settings.computeDevice">
+                        <option value="auto">Auto (Recommended)</option>
+                        <option value="cuda">CUDA / GPU</option>
+                        <option value="cpu">CPU Only</option>
+                    </select>
+                </div>
+                <div class="pm-form-group">
+                    <label class="pm-label">Inference Precision</label>
+                    <select class="pm-select" [(ngModel)]="settings.precision">
+                        <option value="float32">Float32 (Highest Quality)</option>
+                        <option value="float16">Float16 (Faster)</option>
+                        <option value="bfloat16">BFloat16 (Balanced)</option>
+                    </select>
+                </div>
+            </div>
+        </section>
+
+        <!-- Storage Settings -->
+        <section class="settings-section pm-card">
+            <h2>
+                <span class="section-icon" [innerHTML]="icons.hardDrive"></span>
+                Storage
+            </h2>
+            <div class="settings-group">
+                <div class="storage-stats">
+                    <div class="storage-item">
+                        <span class="storage-label">Datasets</span>
+                        <div class="storage-bar">
+                            <div class="storage-fill" style="width: 45%"></div>
+                        </div>
+                        <span class="storage-value">45.2 GB / 100 GB</span>
+                    </div>
+                    <div class="storage-item">
+                        <span class="storage-label">Models</span>
+                        <div class="storage-bar">
+                            <div class="storage-fill" style="width: 23%"></div>
+                        </div>
+                        <span class="storage-value">2.3 GB / 10 GB</span>
+                    </div>
+                    <div class="storage-item">
+                        <span class="storage-label">Results</span>
+                        <div class="storage-bar">
+                            <div class="storage-fill" style="width: 67%"></div>
+                        </div>
+                        <span class="storage-value">67.8 GB / 100 GB</span>
+                    </div>
+                </div>
+                <button class="pm-btn pm-btn-secondary" style="margin-top: 8px;">
+                    <span class="pm-icon" [innerHTML]="icons.trash"></span>
+                    Clear Cache
+                </button>
+            </div>
+        </section>
+    </div>
+
+    <div class="settings-actions">
+        <button class="pm-btn pm-btn-secondary" (click)="resetSettings()">
+            <span class="pm-icon" [innerHTML]="icons.refresh"></span>
+            Reset to Defaults
+        </button>
+        <button class="pm-btn pm-btn-primary" (click)="saveSettings()">
+            <span class="pm-icon" [innerHTML]="icons.check"></span>
+            Save Changes
+        </button>
+    </div>
+</div>

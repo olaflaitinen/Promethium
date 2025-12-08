@@ -1,35 +1,46 @@
 <div class="layout-container">
-    <!-- Sidebar -->
+    <!-- Sidebar Navigation -->
     <nav class="sidebar">
         <div class="logo-container">
-            <div class="logo-icon"></div> <!-- Replaced with real SVG/Img if avail -->
+            <div class="logo-mark"></div>
             <span class="logo-text">Promethium</span>
         </div>
 
-        <div class="nav-links">
-            <a routerLink="/dashboard" routerLinkActive="active" class="nav-item">
-                <i class="icon">📊</i> Dashboard
-            </a>
-            <a routerLink="/datasets" routerLinkActive="active" class="nav-item">
-                <i class="icon">💾</i> Datasets
-            </a>
-            <a routerLink="/jobs" routerLinkActive="active" class="nav-item">
-                <i class="icon">⚡</i> Jobs
-            </a>
-            <a routerLink="/settings" routerLinkActive="active" class="nav-item">
-                <i class="icon">⚙️</i> Settings
-            </a>
+        <div class="nav-section">
+            <div class="nav-section-label">Main</div>
+            <div class="nav-links">
+                <a *ngFor="let item of mainNavItems" [routerLink]="item.path" routerLinkActive="active"
+                    class="nav-item">
+                    <span class="nav-icon" [innerHTML]="item.icon"></span>
+                    <span class="nav-label">{{ item.label }}</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-section-label">System</div>
+            <div class="nav-links">
+                <a *ngFor="let item of secondaryNavItems" [routerLink]="item.path" routerLinkActive="active"
+                    class="nav-item">
+                    <span class="nav-icon" [innerHTML]="item.icon"></span>
+                    <span class="nav-label">{{ item.label }}</span>
+                </a>
+            </div>
         </div>
 
         <div class="sidebar-footer">
             <div class="system-status">
-                <span class="status-dot"></span> System Online
+                <span class="status-dot"></span>
+                <span>System Online</span>
             </div>
+            <div class="version-info">v{{ appVersion }}</div>
         </div>
     </nav>
 
-    <!-- Main Content -->
+    <!-- Main Content Area -->
     <main class="main-content">
-        <router-outlet></router-outlet>
+        <div class="content-wrapper">
+            <router-outlet></router-outlet>
+        </div>
     </main>
 </div>

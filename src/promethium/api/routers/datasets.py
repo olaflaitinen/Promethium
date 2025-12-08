@@ -157,3 +157,25 @@ async def get_dataset(dataset_id: int, db: AsyncSession = Depends(get_db)):
     if not dataset:
         raise HTTPException(status_code=404, detail="Dataset not found")
     return dataset
+
+@router.delete("/{dataset_id}", status_code=204)
+async def delete_dataset(dataset_id: int, db: AsyncSession = Depends(get_db)):
+    """
+    Delete a dataset and its associated file.
+    """
+    dataset = await db.get(Dataset, dataset_id)
+    if not dataset:
+        raise HTTPException(status_code=404, detail="Dataset not found")
+    
+    # Delete the file if it exists
+    if dataset.file_path and os.path.exists(dataset.file_path):
+        try:
+            os.remove(dataset.file_path)
+            logger.info(f"Deleted file: {dataset.file_path}")
+        except Exception as e:
+            logger.warning(f"Could not delete file {dataset.file_path}: {e}")
+    
+    await db.delete(dataset)
+    await db.commit()
+    logger.info(f"Dataset deleted: {dataset_id}")
+    return None

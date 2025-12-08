@@ -1,62 +1,116 @@
-<div class="page-header">
-    <h1>Create New Job</h1>
-    <p>Configure your seismic reconstruction pipeline.</p>
+<div class="jobs-page">
+    <div class="page-header">
+        <div>
+            <h1>Pipelines & Jobs</h1>
+            <p class="subtitle">Manage seismic reconstruction workflows</p>
+        </div>
+        <div class="actions-bar">
+            <button class="pm-btn pm-btn-secondary" (click)="loadJobs()">
+                <span class="pm-icon" [innerHTML]="icons.refresh"></span>
+                Refresh
+            </button>
+            <button class="pm-btn pm-btn-primary" (click)="openCreateModal()">
+                <span class="pm-icon" [innerHTML]="icons.plus"></span>
+                New Pipeline Job
+            </button>
+        </div>
+    </div>
+
+    <!-- Jobs List -->
+    <div class="jobs-container pm-card">
+        <div class="loading-state" *ngIf="loading">
+            <div class="spinner"></div>
+            <p>Loading jobs history...</p>
+        </div>
+
+        <div class="empty-state" *ngIf="!loading && jobs.length === 0">
+            <span class="empty-icon" [innerHTML]="icons.zap"></span>
+            <h3>No Jobs Found</h3>
+            <p>Create a new pipeline job to start processing data.</p>
+        </div>
+
+        <div class="table-responsive" *ngIf="!loading && jobs.length > 0">
+            <table class="pm-table">
+                <thead>
+                    <tr>
+                        <th>Status</th>
+                        <th>Job ID</th>
+                        <th>Dataset ID</th>
+                        <th>Algorithm</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let job of jobs">
+                        <td>
+                            <span class="pm-badge" [ngClass]="getStatusClass(job.status)">
+                                {{ job.status }}
+                            </span>
+                        </td>
+                        <td><span class="uk-text-monospace text-muted">{{ job.id | slice:0:8 }}...</span></td>
+                        <td>{{ job.dataset_id }}</td>
+                        <td>{{ job.algorithm }}</td>
+                        <td>{{ job.created_at | date:'medium' }}</td>
+                        <td>
+                            <button class="pm-btn pm-btn-ghost pm-btn-sm">
+                                <span class="pm-icon" [innerHTML]="icons.eye"></span>
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 
-<div class="config-container pm-card">
-    <div class="form-group">
-        <label>Job Name</label>
-        <input type="text" class="pm-input" placeholder="e.g. Denoise Survey A">
-    </div>
+<!-- Create Job Modal -->
+<div class="modal-overlay" *ngIf="showCreateModal" (click)="showCreateModal = false">
+    <div class="modal-content pm-card" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+            <h2>Start New Pipeline</h2>
+            <button class="modal-close" (click)="showCreateModal = false">
+                <span [innerHTML]="icons.x"></span>
+            </button>
+        </div>
 
-    <div class="form-group">
-        <label>Select Dataset</label>
-        <select class="pm-input">
-            <option>Gulf_of_Mexico_Block_A.sgy</option>
-            <option>North_Sea_Survey_04.zarr</option>
-        </select>
-    </div>
+        <div class="modal-body">
+            <div class="pm-form-group">
+                <label class="pm-label">Input Dataset</label>
+                <select class="pm-select" [(ngModel)]="newJob.dataset_id">
+                    <option *ngFor="let ds of datasets" [ngValue]="ds.id">{{ ds.name }} ({{ ds.format }})</option>
+                </select>
+            </div>
 
-    <div class="form-group">
-        <label>Model Family</label>
-        <div class="model-cards">
-            <div class="model-card selected">
-                <div class="model-icon">🧬</div>
-                <h3>U-Net</h3>
-                <p>Standard Reconstruction</p>
+            <div class="pm-form-group">
+                <label class="pm-label">Model / Algorithm</label>
+                <select class="pm-select" [(ngModel)]="selectedModelId">
+                    <option value="" disabled selected>Select a model...</option>
+                    <option *ngFor="let model of models" [value]="model.id">{{ model.name }} ({{ model.type }})</option>
+                </select>
             </div>
-            <div class="model-card">
-                <div class="model-icon">🌌</div>
-                <h3>Autoencoder</h3>
-                <p>Noise Suppression</p>
-            </div>
-            <div class="model-card">
-                <div class="model-icon">📐</div>
-                <h3>PINN</h3>
-                <p>Physics-Informed</p>
+
+            <div class="pm-form-group" *ngIf="newJob.params">
+                <label class="pm-label">Hyperparameters</label>
+                <div class="param-grid">
+                    <div>
+                        <label class="sub-label">Epochs</label>
+                        <input type="number" class="pm-input" [(ngModel)]="newJob.params['epochs']">
+                    </div>
+                    <div>
+                        <label class="sub-label">Batch Size</label>
+                        <input type="number" class="pm-input" [(ngModel)]="newJob.params['batch_size']">
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div class="form-group">
-        <label>Hyperparameters</label>
-        <div class="param-grid">
-            <div class="param-item">
-                <label>Learning Rate</label>
-                <input type="number" class="pm-input" value="0.001">
-            </div>
-            <div class="param-item">
-                <label>Batch Size</label>
-                <input type="number" class="pm-input" value="32">
-            </div>
-            <div class="param-item">
-                <label>Epochs</label>
-                <input type="number" class="pm-input" value="100">
-            </div>
+        <div class="modal-footer">
+            <button class="pm-btn pm-btn-secondary" (click)="showCreateModal = false">Cancel</button>
+            <button class="pm-btn pm-btn-primary" (click)="createJob()" [disabled]="submitting || !selectedModelId">
+                <span class="pm-icon" [innerHTML]="icons.play"></span>
+                {{ submitting ? 'Starting...' : 'Launch Job' }}
+            </button>
         </div>
-    </div>
-
-    <div class="form-actions">
-        <button class="pm-btn pm-btn-primary">Launch Job 🚀</button>
     </div>
 </div>

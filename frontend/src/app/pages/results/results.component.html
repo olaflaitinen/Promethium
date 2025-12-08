@@ -1,0 +1,131 @@
+<div class="results-page">
+    <div class="page-header">
+        <h1>Results Analysis</h1>
+        <p class="subtitle">Visualize and compare reconstruction outputs</p>
+    </div>
+
+    <!-- Selection Panel -->
+    <div class="selection-panel pm-card">
+        <div class="selection-header">
+            <span class="selection-icon" [innerHTML]="icons.filter"></span>
+            <h3>Select Data</h3>
+        </div>
+        <div class="selection-grid">
+            <div class="pm-form-group">
+                <label class="pm-label">Dataset</label>
+                <select class="pm-select" [(ngModel)]="selectedDatasetId" (change)="selectedJobId = null">
+                    <option [ngValue]="null">Select a dataset...</option>
+                    <option *ngFor="let dataset of datasets" [ngValue]="dataset.id">
+                        {{ dataset.name }} ({{ dataset.format }})
+                    </option>
+                </select>
+            </div>
+            <div class="pm-form-group">
+                <label class="pm-label">Completed Job</label>
+                <select class="pm-select" [(ngModel)]="selectedJobId" [disabled]="!selectedDatasetId">
+                    <option [ngValue]="null">Select a job...</option>
+                    <option *ngFor="let job of getJobsForDataset()" [ngValue]="job.id">
+                        {{ job.algorithm }} - {{ job.created_at | date:'short' }}
+                    </option>
+                </select>
+            </div>
+            <div class="selection-action">
+                <button class="pm-btn pm-btn-primary" [disabled]="!canVisualize()">
+                    <span class="pm-icon" [innerHTML]="icons.barChart"></span>
+                    Visualize Results
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading-state" *ngIf="loading">
+        <div class="spinner"></div>
+        <p>Loading data...</p>
+    </div>
+
+    <!-- Visualization Placeholder -->
+    <div class="visualization-area" *ngIf="!loading && canVisualize()">
+        <div class="viz-section pm-card">
+            <div class="pm-card-header">
+                <h3 class="pm-card-title">Original vs Reconstructed</h3>
+            </div>
+            <div class="viz-placeholder">
+                <span class="viz-icon" [innerHTML]="icons.waveform"></span>
+                <p>Waveform comparison visualization will be displayed here</p>
+                <span class="viz-hint">Select a completed job to view results</span>
+            </div>
+        </div>
+
+        <div class="two-column-grid">
+            <div class="viz-section pm-card">
+                <div class="pm-card-header">
+                    <h3 class="pm-card-title">Time-Frequency Analysis</h3>
+                </div>
+                <div class="viz-placeholder small">
+                    <span class="viz-icon-small" [innerHTML]="icons.layers"></span>
+                    <p>Spectrogram comparison</p>
+                </div>
+            </div>
+            <div class="viz-section pm-card">
+                <div class="pm-card-header">
+                    <h3 class="pm-card-title">Error Distribution</h3>
+                </div>
+                <div class="viz-placeholder small">
+                    <span class="viz-icon-small" [innerHTML]="icons.activity"></span>
+                    <p>Difference analysis</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Metrics Summary -->
+        <div class="metrics-summary pm-card">
+            <div class="pm-card-header">
+                <h3 class="pm-card-title">Reconstruction Metrics</h3>
+            </div>
+            <div class="metrics-table-container">
+                <table class="pm-table">
+                    <thead>
+                        <tr>
+                            <th>Metric</th>
+                            <th>Value</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>SNR</td>
+                            <td class="text-cyan">28.5 dB</td>
+                            <td>Signal-to-Noise Ratio improvement</td>
+                        </tr>
+                        <tr>
+                            <td>PSNR</td>
+                            <td class="text-cyan">35.2</td>
+                            <td>Peak Signal-to-Noise Ratio</td>
+                        </tr>
+                        <tr>
+                            <td>SSIM</td>
+                            <td class="text-cyan">0.94</td>
+                            <td>Structural Similarity Index</td>
+                        </tr>
+                        <tr>
+                            <td>MSE</td>
+                            <td class="text-cyan">0.0012</td>
+                            <td>Mean Squared Error</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state pm-card" *ngIf="!loading && !canVisualize()">
+        <span class="empty-icon" [innerHTML]="icons.barChart"></span>
+        <h3>No Results Selected</h3>
+        <p>Select a dataset and completed job to visualize reconstruction results.</p>
+        <p class="empty-hint" *ngIf="datasets.length === 0">
+            Start by uploading a dataset and running a reconstruction job.
+        </p>
+    </div>
+</div>

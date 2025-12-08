@@ -1,0 +1,147 @@
+<div class="system-page">
+    <div class="page-header">
+        <h1>System Status</h1>
+        <p class="subtitle">Monitor system health, workers, and resources</p>
+    </div>
+
+    <!-- Health Banner -->
+    <div class="health-banner pm-card" [ngClass]="getHealthClass()" *ngIf="health">
+        <div class="health-icon">
+            <span *ngIf="health.status === 'ok'" [innerHTML]="icons.checkCircle"></span>
+            <span *ngIf="health.status === 'degraded'" [innerHTML]="icons.alertCircle"></span>
+            <span *ngIf="health.status === 'error'" [innerHTML]="icons.xCircle"></span>
+        </div>
+        <div class="health-content">
+            <h2>{{ getHealthLabel() }}</h2>
+            <p>Version {{ health.version }}</p>
+        </div>
+        <button class="pm-btn pm-btn-secondary" (click)="loadSystemData()">
+            <span class="pm-icon" [innerHTML]="icons.refresh"></span>
+            Refresh
+        </button>
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading-state" *ngIf="loading">
+        <div class="spinner"></div>
+        <p>Loading system metrics...</p>
+    </div>
+
+    <!-- Metrics Grid -->
+    <div class="metrics-section" *ngIf="!loading && metrics">
+        <h2>System Metrics</h2>
+        <div class="metrics-grid">
+            <div class="metric-card pm-card">
+                <div class="metric-header">
+                    <span class="metric-icon" [innerHTML]="icons.zap"></span>
+                    <span class="metric-label">Active Jobs</span>
+                </div>
+                <div class="metric-value">{{ metrics.active_jobs }}</div>
+                <div class="metric-sub">Currently processing</div>
+            </div>
+            <div class="metric-card pm-card">
+                <div class="metric-header">
+                    <span class="metric-icon" [innerHTML]="icons.clock"></span>
+                    <span class="metric-label">Queued Jobs</span>
+                </div>
+                <div class="metric-value">{{ metrics.queued_jobs }}</div>
+                <div class="metric-sub">Awaiting processing</div>
+            </div>
+            <div class="metric-card pm-card">
+                <div class="metric-header">
+                    <span class="metric-icon" [innerHTML]="icons.checkCircle"></span>
+                    <span class="metric-label">Completed (24h)</span>
+                </div>
+                <div class="metric-value">{{ metrics.completed_jobs_24h }}</div>
+                <div class="metric-sub">Last 24 hours</div>
+            </div>
+            <div class="metric-card pm-card">
+                <div class="metric-header">
+                    <span class="metric-icon" [innerHTML]="icons.hardDrive"></span>
+                    <span class="metric-label">Storage Used</span>
+                </div>
+                <div class="metric-value">{{ metrics.storage_used_gb }} GB</div>
+                <div class="metric-sub">Total data stored</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Services Status -->
+    <div class="services-section" *ngIf="!loading">
+        <h2>Services</h2>
+        <div class="pm-card">
+            <table class="pm-table">
+                <thead>
+                    <tr>
+                        <th>Service</th>
+                        <th>Status</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <span class="service-name">
+                                <span class="service-icon" [innerHTML]="icons.server"></span>
+                                API Server
+                            </span>
+                        </td>
+                        <td><span class="pm-badge pm-badge-success">Online</span></td>
+                        <td>FastAPI backend service</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span class="service-name">
+                                <span class="service-icon" [innerHTML]="icons.database"></span>
+                                Database
+                            </span>
+                        </td>
+                        <td><span class="pm-badge pm-badge-success">Connected</span></td>
+                        <td>PostgreSQL database connection</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span class="service-name">
+                                <span class="service-icon" [innerHTML]="icons.zap"></span>
+                                Task Queue
+                            </span>
+                        </td>
+                        <td><span class="pm-badge pm-badge-success">Running</span></td>
+                        <td>Celery worker processes</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span class="service-name">
+                                <span class="service-icon" [innerHTML]="icons.cpu"></span>
+                                ML Engine
+                            </span>
+                        </td>
+                        <td><span class="pm-badge pm-badge-success">Ready</span></td>
+                        <td>PyTorch inference backend</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Quick Links -->
+    <div class="links-section" *ngIf="!loading">
+        <h2>External Resources</h2>
+        <div class="links-grid">
+            <a href="http://localhost:8000/docs" target="_blank" class="link-card pm-card">
+                <span class="link-icon" [innerHTML]="icons.externalLink"></span>
+                <div>
+                    <div class="link-title">API Documentation</div>
+                    <div class="link-desc">OpenAPI/Swagger interface</div>
+                </div>
+            </a>
+            <a href="http://localhost:8000/redoc" target="_blank" class="link-card pm-card">
+                <span class="link-icon" [innerHTML]="icons.book"></span>
+                <div>
+                    <div class="link-title">ReDoc</div>
+                    <div class="link-desc">Alternative API docs</div>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>

@@ -428,6 +428,14 @@ code {
   width: 20px;
   height: 20px;
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pm-icon svg {
+  width: 100%;
+  height: 100%;
 }
 
 .pm-icon-sm {
@@ -435,14 +443,29 @@ code {
   height: 16px;
 }
 
+.pm-icon-sm svg {
+  width: 100%;
+  height: 100%;
+}
+
 .pm-icon-lg {
   width: 24px;
   height: 24px;
 }
 
+.pm-icon-lg svg {
+  width: 100%;
+  height: 100%;
+}
+
 .pm-icon-xl {
   width: 32px;
   height: 32px;
+}
+
+.pm-icon-xl svg {
+  width: 100%;
+  height: 100%;
 }
 
 /* Utility Classes */

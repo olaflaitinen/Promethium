@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService, Dataset, Job, JobCreate, JobStatus, Model } from '../../services/api.service';
 import { Icons } from '../../shared/icons';
@@ -7,7 +7,7 @@ import { Icons } from '../../shared/icons';
 @Component({
     selector: 'app-job-submission',
     standalone: true,
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, DatePipe],
     templateUrl: './job-submission.component.html',
     styleUrls: ['./job-submission.component.css']
 })

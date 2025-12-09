@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ApiService, Dataset, Job } from '../../services/api.service';
+import { ApiService, Dataset, Job, JobStatus } from '../../services/api.service';
 import { Icons } from '../../shared/icons';
 
 @Component({
@@ -41,7 +41,7 @@ export class ResultsComponent implements OnInit {
 
         this.api.getJobs().subscribe({
             next: (jobs) => {
-                this.jobs = jobs.filter(j => j.status === 'completed');
+                this.jobs = jobs.filter(j => j.status === JobStatus.COMPLETED);
             },
             error: () => {
                 this.jobs = [];

@@ -10,7 +10,7 @@ Import Namespace: promethium
 Version: 1.0.0
 
 Installation:
-    pip install promethium-seismic==1.0.1
+    pip install promethium-seismic==1.0.2
 
 Quick Start:
     >>> import promethium
@@ -31,7 +31,7 @@ Copyright (c) 2025 Olaf Yunus Laitinen Imanov
 Licensed under CC BY-NC 4.0
 """
 
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 __author__ = "Olaf Yunus Laitinen Imanov"
 __license__ = "CC BY-NC 4.0"
 

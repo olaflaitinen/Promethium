@@ -7,10 +7,10 @@ This document provides a comprehensive guide to the Jupyter notebooks included i
 All notebooks require:
 
 ```bash
-pip install promethium-seismic==1.0.1
+pip install promethium-seismic==1.0.2
 ```
 
-**PyPI Package:** [https://pypi.org/project/promethium-seismic/1.0.1/](https://pypi.org/project/promethium-seismic/1.0.1/)
+**PyPI Package:** [https://pypi.org/project/promethium-seismic/1.0.2/](https://pypi.org/project/promethium-seismic/1.0.2/)
 
 ## Notebook Catalog
 

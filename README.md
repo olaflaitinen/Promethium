@@ -359,10 +359,10 @@ promethium/
 Install Promethium directly from PyPI:
 
 ```bash
-pip install promethium-seismic==1.0.1
+pip install promethium-seismic==1.0.2
 ```
 
-**PyPI Package:** [https://pypi.org/project/promethium-seismic/1.0.1/](https://pypi.org/project/promethium-seismic/1.0.1/)
+**PyPI Package:** [https://pypi.org/project/promethium-seismic/1.0.2/](https://pypi.org/project/promethium-seismic/1.0.2/)
 
 This installs the core library with minimal dependencies, suitable for most use cases including Kaggle and Google Colab notebooks.
 
@@ -398,7 +398,7 @@ Promethium is designed to work seamlessly in cloud notebook environments:
 
 ```python
 # Install in a notebook cell
-!pip install promethium-seismic==1.0.1
+!pip install promethium-seismic==1.0.2
 
 import promethium
 from promethium import read_segy, SeismicRecoveryPipeline
@@ -609,7 +609,7 @@ Promethium includes a comprehensive suite of 15 Jupyter notebooks for learning a
 ### Quick Start
 
 ```bash
-pip install promethium-seismic==1.0.1
+pip install promethium-seismic==1.0.2
 jupyter notebook notebooks/
 ```
 

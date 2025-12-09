@@ -17,3 +17,12 @@ class ModelError(PromethiumError):
 class WorkflowError(PromethiumError):
     """Raised when a workflow/pipeline step fails."""
     pass
+
+class ProcessingError(PromethiumError):
+    """Raised when signal processing operations fail."""
+    pass
+
+class ValidationError(PromethiumError):
+    """Raised when data validation fails."""
+    pass
+

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "promethium-seismic"
-version = "1.0.1"
+version = "1.0.2"
 description = "Promethium - Advanced Seismic Data Recovery and Reconstruction Framework. State-of-the-art AI-driven framework for seismic signal reconstruction, denoising, and geophysical data enhancement."
 authors = [{name = "Olaf Yunus Laitinen Imanov", email = "contact@promethium.dev"}]
 readme = "README.md"

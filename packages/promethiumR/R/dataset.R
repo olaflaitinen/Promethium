@@ -1,28 +1,47 @@
-#' SeismicDataset Constructor
+#' Core Data Structures for promethiumR
 #'
-#' Create a new SeismicDataset object containing seismic trace data.
+#' Defines SeismicDataset and VelocityModel S3 classes.
+
+# ============== SeismicDataset ==============
+
+#' Create a Seismic Dataset
 #'
-#' @param traces Numeric matrix (n_traces x n_samples)
-#' @param dt Sampling interval in seconds
-#' @param coords Optional data frame with spatial coordinates
-#' @param metadata Named list of metadata key-value pairs
-#' @return SeismicDataset S3 object
-#' @export
+#' Constructor for SeismicDataset S3 class containing multi-trace seismic data.
+#'
+#' @param traces Numeric matrix (ntraces x nsamples) of trace data.
+#' @param dt Numeric scalar, sampling interval in seconds.
+#' @param coords Optional data.frame or matrix with spatial coordinates.
+#' @param metadata Optional named list of metadata fields.
+#'
+#' @return An object of class "SeismicDataset".
+#'
 #' @examples
 #' traces <- matrix(rnorm(1000), nrow = 10, ncol = 100)
 #' ds <- SeismicDataset(traces, dt = 0.004)
 #' print(ds)
+#'
+#' @export
 SeismicDataset <- function(traces, dt, coords = NULL, metadata = list()) {
-  stopifnot(is.matrix(traces), is.numeric(dt), dt > 0)
+  # Input validation
+  if (!is.numeric(traces) || !is.matrix(traces)) {
+    stop("`traces` must be a numeric matrix")
+  }
+  if (!is.numeric(dt) || length(dt) != 1L || dt <= 0) {
+    stop("`dt` must be a positive numeric scalar")
+  }
+  if (!is.null(coords) && !is.data.frame(coords) && !is.matrix(coords)) {
+    stop("`coords` must be a data.frame or matrix, if provided")
+  }
+  if (!is.list(metadata)) {
+    stop("`metadata` must be a list")
+  }
   
   structure(
     list(
       traces = traces,
       dt = dt,
       coords = coords,
-      metadata = metadata,
-      n_traces = nrow(traces),
-      n_samples = ncol(traces)
+      metadata = metadata
     ),
     class = "SeismicDataset"
   )
@@ -30,82 +49,175 @@ SeismicDataset <- function(traces, dt, coords = NULL, metadata = list()) {
 
 #' @export
 print.SeismicDataset <- function(x, ...) {
-  cat("SeismicDataset:\n")
-  cat(sprintf("  Traces: %d x %d\n", x$n_traces, x$n_samples))
-  cat(sprintf("  Sampling: %.4f s (%.1f Hz)\n", x$dt, 1/x$dt))
-  cat(sprintf("  Duration: %.3f s\n", x$n_samples * x$dt))
-  if (!is.null(x$coords)) {
-    cat(sprintf("  Coords: %d fields\n", ncol(x$coords)))
-  }
+  cat(sprintf("SeismicDataset: %d traces, %d samples, dt=%.4fs, duration=%.3fs\n",
+              nrow(x$traces), ncol(x$traces), x$dt, 
+              (ncol(x$traces) - 1) * x$dt))
   invisible(x)
 }
 
-#' Normalize SeismicDataset traces
+#' @export
+summary.SeismicDataset <- function(object, ...) {
+  traces <- object$traces
+  cat("SeismicDataset Summary\n")
+  cat("======================\n")
+  cat(sprintf("  Traces: %d\n", nrow(traces)))
+  cat(sprintf("  Samples per trace: %d\n", ncol(traces)))
+  cat(sprintf("  Sampling interval: %.4f s\n", object$dt))
+  cat(sprintf("  Duration: %.3f s\n", (ncol(traces) - 1) * object$dt))
+  cat(sprintf("  Min value: %.4f\n", min(traces)))
+  cat(sprintf("  Max value: %.4f\n", max(traces)))
+  cat(sprintf("  Mean: %.4f\n", mean(traces)))
+  cat(sprintf("  RMS: %.4f\n", sqrt(mean(traces^2))))
+  invisible(object)
+}
+
+#' Get number of traces in dataset
+#' @param x SeismicDataset object
+#' @return Integer number of traces
+#' @export
+n_traces <- function(x) {
+  UseMethod("n_traces")
+}
+
+#' @export
+n_traces.SeismicDataset <- function(x) {
+  nrow(x$traces)
+}
+
+#' Get number of samples per trace
+#' @param x SeismicDataset object
+#' @return Integer number of samples
+#' @export
+n_samples <- function(x) {
+  UseMethod("n_samples")
+}
+
+#' @export
+n_samples.SeismicDataset <- function(x) {
+  ncol(x$traces)
+}
+
+#' Get time axis vector
+#' @param x SeismicDataset object
+#' @return Numeric vector of time values
+#' @export
+time_axis <- function(x) {
+  UseMethod("time_axis")
+}
+
+#' @export
+time_axis.SeismicDataset <- function(x) {
+  seq(from = 0, by = x$dt, length.out = n_samples(x))
+}
+
+#' Normalize traces
 #' 
 #' @param x SeismicDataset object
-#' @param method Normalization method: "rms", "max", or "std"
-#' @return New SeismicDataset with normalized traces
+#' @param method Character, normalization method: "max", "rms", or "standard"
+#' @return Normalized SeismicDataset
+#' @export
+normalize <- function(x, method = "rms") {
+  UseMethod("normalize")
+}
+
 #' @export
 normalize.SeismicDataset <- function(x, method = "rms") {
-  if (method == "rms") {
-    rms <- sqrt(rowMeans(x$traces^2))
-    normalized <- x$traces / (rms + 1e-10)
-  } else if (method == "max") {
-    normalized <- x$traces / (max(abs(x$traces)) + 1e-10)
-  } else if (method == "std") {
-    normalized <- scale(t(x$traces))
-    normalized <- t(normalized)
-  } else {
-    stop(sprintf("Unknown normalization method: %s", method))
+  traces <- x$traces
+  normalized <- matrix(0, nrow = nrow(traces), ncol = ncol(traces))
+  
+  for (i in seq_len(nrow(traces))) {
+    row <- traces[i, ]
+    
+    if (method == "max") {
+      max_val <- max(abs(row))
+      if (max_val > 1e-10) {
+        normalized[i, ] <- row / max_val
+      }
+    } else if (method == "rms") {
+      rms <- sqrt(mean(row^2))
+      if (rms > 1e-10) {
+        normalized[i, ] <- row / rms
+      }
+    } else if (method == "standard") {
+      m <- mean(row)
+      s <- sd(row)
+      if (s > 1e-10) {
+        normalized[i, ] <- (row - m) / s
+      } else {
+        normalized[i, ] <- row - m
+      }
+    } else {
+      stop("Unknown normalization method: ", method)
+    }
   }
-  SeismicDataset(normalized, x$dt, x$coords, x$metadata)
+  
+  x$traces <- normalized
+  x
 }
 
-#' Subset SeismicDataset
+#' Subset traces by indices
 #' 
 #' @param x SeismicDataset object
-#' @param trace_idx Trace indices to keep
-#' @param sample_idx Sample indices to keep
-#' @return Subsetted SeismicDataset
+#' @param indices Integer vector of trace indices
+#' @return Subset SeismicDataset
 #' @export
-subset.SeismicDataset <- function(x, trace_idx = NULL, sample_idx = NULL, ...) {
-  traces <- x$traces
-  coords <- x$coords
-  
-  if (!is.null(trace_idx)) {
-    traces <- traces[trace_idx, , drop = FALSE]
-    if (!is.null(coords)) coords <- coords[trace_idx, , drop = FALSE]
+subset_traces <- function(x, indices) {
+  UseMethod("subset_traces")
+}
+
+#' @export
+subset_traces.SeismicDataset <- function(x, indices) {
+  x$traces <- x$traces[indices, , drop = FALSE]
+  if (!is.null(x$coords)) {
+    if (is.data.frame(x$coords)) {
+      x$coords <- x$coords[indices, , drop = FALSE]
+    } else {
+      x$coords <- x$coords[indices, , drop = FALSE]
+    }
   }
-  if (!is.null(sample_idx)) {
-    traces <- traces[, sample_idx, drop = FALSE]
-  }
-  
-  SeismicDataset(traces, x$dt, coords, x$metadata)
+  x
 }
 
 
-#' VelocityModel Constructor
+# ============== VelocityModel ==============
+
+#' Create a Velocity Model
 #'
-#' Create a velocity model for seismic processing.
+#' Constructor for VelocityModel S3 class containing 2D velocity grid.
 #'
-#' @param grid Numeric matrix of velocity values (m/s)
-#' @param dx Horizontal grid spacing (m)
-#' @param dz Vertical grid spacing (m)
-#' @param origin Two-element vector (x0, z0) for grid origin
-#' @param metadata Named list of metadata
-#' @return VelocityModel S3 object
+#' @param velocities Numeric matrix (nz x nx) of velocity values (m/s).
+#' @param dx Numeric scalar, horizontal grid spacing (m).
+#' @param dz Numeric scalar, vertical grid spacing (m).
+#' @param origin Numeric vector c(x0, z0) of grid origin.
+#' @param metadata Optional named list of metadata fields.
+#'
+#' @return An object of class "VelocityModel".
+#'
+#' @examples
+#' v <- matrix(1500, nrow = 50, ncol = 100)
+#' vm <- VelocityModel(v, dx = 10, dz = 5)
+#' print(vm)
+#'
 #' @export
-VelocityModel <- function(grid, dx, dz, origin = c(0, 0), metadata = list()) {
-  stopifnot(is.matrix(grid), dx > 0, dz > 0)
+VelocityModel <- function(velocities, dx, dz, origin = c(0, 0), 
+                          metadata = list()) {
+  # Input validation
+  if (!is.numeric(velocities) || !is.matrix(velocities)) {
+    stop("`velocities` must be a numeric matrix")
+  }
+  if (!is.numeric(dx) || length(dx) != 1L || dx <= 0) {
+    stop("`dx` must be a positive numeric scalar")
+  }
+  if (!is.numeric(dz) || length(dz) != 1L || dz <= 0) {
+    stop("`dz` must be a positive numeric scalar")
+  }
   
   structure(
     list(
-      grid = grid,
+      velocities = velocities,
       dx = dx,
       dz = dz,
       origin = origin,
-      nx = ncol(grid),
-      nz = nrow(grid),
       metadata = metadata
     ),
     class = "VelocityModel"
@@ -114,9 +226,73 @@ VelocityModel <- function(grid, dx, dz, origin = c(0, 0), metadata = list()) {
 
 #' @export
 print.VelocityModel <- function(x, ...) {
-  cat("VelocityModel:\n")
-  cat(sprintf("  Grid: %d x %d\n", x$nz, x$nx))
-  cat(sprintf("  Spacing: dx=%.1f m, dz=%.1f m\n", x$dx, x$dz))
-  cat(sprintf("  Velocity range: %.0f - %.0f m/s\n", min(x$grid), max(x$grid)))
+  cat(sprintf("VelocityModel: %dx%d, v=%.0f-%.0f m/s\n",
+              nrow(x$velocities), ncol(x$velocities),
+              min(x$velocities), max(x$velocities)))
   invisible(x)
+}
+
+#' Create constant velocity model
+#' @param velocity Constant velocity value (m/s)
+#' @param nx Number of horizontal points
+#' @param nz Number of vertical points
+#' @param dx Horizontal spacing (m)
+#' @param dz Vertical spacing (m)
+#' @return VelocityModel object
+#' @export
+constant_velocity <- function(velocity, nx, nz, dx, dz) {
+  v <- matrix(velocity, nrow = nz, ncol = nx)
+  VelocityModel(v, dx, dz)
+}
+
+#' Create linear velocity gradient model
+#' @param v0 Surface velocity (m/s)
+#' @param gradient Velocity gradient (1/s)
+#' @param nx Number of horizontal points
+#' @param nz Number of vertical points
+#' @param dx Horizontal spacing (m)
+#' @param dz Vertical spacing (m)
+#' @return VelocityModel object
+#' @export
+linear_velocity <- function(v0, gradient, nx, nz, dx, dz) {
+  v <- matrix(0, nrow = nz, ncol = nx)
+  for (i in seq_len(nz)) {
+    v[i, ] <- v0 + gradient * (i - 1) * dz
+  }
+  VelocityModel(v, dx, dz)
+}
+
+#' Bilinear interpolation of velocity at position
+#' @param vm VelocityModel object
+#' @param x Horizontal position (m)
+#' @param z Vertical position (m)
+#' @return Interpolated velocity value
+#' @export
+interpolate_at <- function(vm, x, z) {
+  x0 <- vm$origin[1]
+  z0 <- vm$origin[2]
+  
+  ix <- (x - x0) / vm$dx
+  iz <- (z - z0) / vm$dz
+  
+  nz <- nrow(vm$velocities)
+  nx <- ncol(vm$velocities)
+  
+  i0 <- max(1, min(nz - 1, floor(iz) + 1))
+  j0 <- max(1, min(nx - 1, floor(ix) + 1))
+  i1 <- i0 + 1
+  j1 <- j0 + 1
+  
+  fx <- ix - (j0 - 1)
+  fz <- iz - (i0 - 1)
+  
+  v00 <- vm$velocities[i0, j0]
+  v01 <- vm$velocities[i0, j1]
+  v10 <- vm$velocities[i1, j0]
+  v11 <- vm$velocities[i1, j1]
+  
+  (1 - fx) * (1 - fz) * v00 +
+  fx * (1 - fz) * v01 +
+  (1 - fx) * fz * v10 +
+  fx * fz * v11
 }

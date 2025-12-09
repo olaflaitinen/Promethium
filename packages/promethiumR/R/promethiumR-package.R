@@ -1,21 +1,23 @@
-#' promethiumR: Advanced Seismic Data Recovery Framework
+#' promethiumR: Advanced Seismic Data Recovery and Reconstruction Framework
 #'
-#' Native R implementation of the Promethium seismic data recovery framework.
-#' Provides algorithms for denoising, interpolation, matrix completion, and
-#' deep learning-based reconstruction.
+#' Native R implementation of the Promethium framework for seismic data
+#' recovery and reconstruction. Part of the multi-language Promethium ecosystem
+#' with consistent implementations in Python, Julia, and Scala.
 #'
-#' @section Core Types:
+#' @section Core Functions:
 #' \itemize{
-#'   \item \code{\link{SeismicDataset}}: Container for seismic trace data
-#'   \item \code{\link{VelocityModel}}: Velocity model representation
-#'   \item \code{\link{RecoveryPipeline}}: Processing pipeline configuration
+#'   \item \code{\link{SeismicDataset}}: Create seismic dataset objects
+#'   \item \code{\link{VelocityModel}}: Create velocity model objects
+#'   \item \code{\link{promethium_pipeline}}: Create recovery pipelines
+#'   \item \code{\link{promethium_run}}: Execute recovery pipelines
 #' }
 #'
 #' @section Algorithms:
 #' \itemize{
-#'   \item \code{\link{wiener_filter}}: Frequency-domain Wiener denoising
-#'   \item \code{\link{matrix_completion_ista}}: Nuclear norm matrix completion
-#'   \item \code{\link{compressive_sensing_fista}}: L1-regularized recovery
+#'   \item \code{\link{wiener_filter}}: Wiener filter denoising
+#'   \item \code{\link{bandpass_filter}}: Frequency-domain bandpass filter
+#'   \item \code{\link{matrix_completion_ista}}: ISTA matrix completion
+#'   \item \code{\link{compressive_sensing_fista}}: FISTA sparse recovery
 #' }
 #'
 #' @section Evaluation:
@@ -23,11 +25,14 @@
 #'   \item \code{\link{compute_snr}}: Signal-to-Noise Ratio
 #'   \item \code{\link{compute_mse}}: Mean Squared Error
 #'   \item \code{\link{compute_psnr}}: Peak SNR
+#'   \item \code{\link{compute_ssim}}: Structural Similarity Index
 #' }
 #'
 #' @docType package
-#' @name promethiumR
-"_PACKAGE"
+#' @name promethiumR-package
+#' @aliases promethiumR
+NULL
 
-# Package version aligned with global Promethium spec
-.promethium_version <- "1.0.4"
+#' Package version
+#' @export
+PROMETHIUM_VERSION <- "1.0.4"

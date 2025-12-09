@@ -1,23 +1,35 @@
 Package: promethiumR
+Type: Package
 Title: Advanced Seismic Data Recovery and Reconstruction Framework
 Version: 1.0.4
-Authors@R: 
-    person("Olaf Yunus", "Laitinen Imanov", , "contact@promethium.dev", role = c("aut", "cre"))
-Description: Native R implementation of the Promethium seismic data recovery 
-    framework. Provides algorithms for denoising, interpolation, matrix 
-    completion, and deep learning-based reconstruction of seismic data.
-    Implements the shared Promethium specification for cross-language consistency.
+Authors@R: c(
+    person("Promethium", "Contributors", email = "promethium@example.com", 
+           role = c("aut", "cre")))
+Description: Native R implementation of the Promethium framework for seismic 
+    data recovery and reconstruction. Provides algorithms for missing trace 
+    interpolation, denoising, and signal reconstruction using classical signal 
+    processing (Wiener filtering, bandpass filters), optimization-based methods 
+    (matrix completion via ISTA, compressive sensing via FISTA), and deep 
+    learning (U-Net, autoencoders). Part of the multi-language Promethium 
+    ecosystem with mathematically consistent implementations in Python, Julia, 
+    and Scala.
 License: CC BY-NC 4.0
+URL: https://github.com/olaflaitinen/Promethium
+BugReports: https://github.com/olaflaitinen/Promethium/issues
 Encoding: UTF-8
+LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3
+Depends: 
+    R (>= 4.0.0)
 Imports:
     stats,
     graphics,
     methods
 Suggests:
     testthat (>= 3.0.0),
-    torch,
-    Rcpp
-LinkingTo: Rcpp
+    knitr,
+    rmarkdown,
+    hdf5r
+VignetteBuilder: knitr
 Config/testthat/edition: 3

@@ -1,53 +1,115 @@
+#' Evaluation Metrics for Seismic Reconstruction Quality
+#'
+#' All metrics follow the Promethium specification for cross-language
+#' consistency with Python, Julia, and Scala implementations.
+
+EPSILON <- 1e-10
+
 #' Compute Signal-to-Noise Ratio
 #'
-#' @param reference Reference (ground truth) signal matrix
-#' @param estimate Estimated/reconstructed signal matrix
-#' @return SNR value in decibels (dB)
+#' SNR = 10 * log10(P_signal / P_noise)
+#'
+#' @param reference Reference SeismicDataset (ground truth)
+#' @param estimate Estimated/reconstructed SeismicDataset
+#' @return SNR in decibels
+#'
+#' @examples
+#' ref <- SeismicDataset(matrix(rnorm(100), 10, 10), dt = 0.004)
+#' est <- SeismicDataset(ref$traces + 0.1 * rnorm(100), dt = 0.004)
+#' snr <- compute_snr(ref, est)
+#'
 #' @export
 compute_snr <- function(reference, estimate) {
-  signal_power <- mean(reference^2)
-  noise_power <- mean((reference - estimate)^2)
-  10 * log10(signal_power / (noise_power + 1e-10))
+  if (!inherits(reference, "SeismicDataset") || 
+      !inherits(estimate, "SeismicDataset")) {
+    stop("Both arguments must be SeismicDataset objects")
+  }
+  
+  ref <- as.vector(reference$traces)
+  est <- as.vector(estimate$traces)
+  
+  if (length(ref) != length(est)) {
+    stop("Dimension mismatch between reference and estimate")
+  }
+  
+  signal_power <- mean(ref^2)
+  noise <- ref - est
+  noise_power <- mean(noise^2)
+  
+  10 * log10(signal_power / (noise_power + EPSILON))
 }
 
 #' Compute Mean Squared Error
 #'
-#' @param reference Reference signal
-#' @param estimate Estimated signal
+#' MSE = mean((reference - estimate)^2)
+#'
+#' @param reference Reference SeismicDataset
+#' @param estimate Estimated SeismicDataset
 #' @return MSE value
+#'
 #' @export
 compute_mse <- function(reference, estimate) {
-  mean((reference - estimate)^2)
+  if (!inherits(reference, "SeismicDataset") || 
+      !inherits(estimate, "SeismicDataset")) {
+    stop("Both arguments must be SeismicDataset objects")
+  }
+  
+  ref <- reference$traces
+  est <- estimate$traces
+  
+  if (!all(dim(ref) == dim(est))) {
+    stop("Dimension mismatch between reference and estimate")
+  }
+  
+  mean((ref - est)^2)
 }
 
 #' Compute Peak Signal-to-Noise Ratio
 #'
-#' @param reference Reference signal
-#' @param estimate Estimated signal
-#' @return PSNR value in decibels (dB)
+#' PSNR = 10 * log10(max_val^2 / MSE)
+#'
+#' @param reference Reference SeismicDataset
+#' @param estimate Estimated SeismicDataset
+#' @return PSNR in decibels
+#'
 #' @export
 compute_psnr <- function(reference, estimate) {
+  max_val <- max(abs(reference$traces))
   mse <- compute_mse(reference, estimate)
-  max_val <- max(abs(reference))
-  10 * log10(max_val^2 / (mse + 1e-10))
+  10 * log10(max_val^2 / (mse + EPSILON))
 }
 
-#' Compute Structural Similarity Index (SSIM)
+#' Compute Structural Similarity Index
 #'
-#' Simplified SSIM for 1D/2D signals.
+#' Simplified SSIM based on luminance and contrast components.
 #'
-#' @param reference Reference signal
-#' @param estimate Estimated signal
-#' @param C1 Stability constant (default 0.01^2)
-#' @param C2 Stability constant (default 0.03^2)
-#' @return SSIM value in [0, 1]
+#' @param reference Reference SeismicDataset
+#' @param estimate Estimated SeismicDataset
+#' @return SSIM value in [-1, 1]
+#'
 #' @export
-compute_ssim <- function(reference, estimate, C1 = 0.0001, C2 = 0.0009) {
-  mu_x <- mean(reference)
-  mu_y <- mean(estimate)
-  sigma_x <- sd(as.vector(reference))
-  sigma_y <- sd(as.vector(estimate))
-  sigma_xy <- cov(as.vector(reference), as.vector(estimate))
+compute_ssim <- function(reference, estimate) {
+  if (!inherits(reference, "SeismicDataset") || 
+      !inherits(estimate, "SeismicDataset")) {
+    stop("Both arguments must be SeismicDataset objects")
+  }
+  
+  x <- as.vector(reference$traces)
+  y <- as.vector(estimate$traces)
+  
+  if (length(x) != length(y)) {
+    stop("Dimension mismatch")
+  }
+  
+  mu_x <- mean(x)
+  mu_y <- mean(y)
+  sigma_x <- sd(x)
+  sigma_y <- sd(y)
+  sigma_xy <- mean((x - mu_x) * (y - mu_y))
+  
+  # Stability constants
+  C1 <- 0.01^2
+  C2 <- 0.03^2
   
   numerator <- (2 * mu_x * mu_y + C1) * (2 * sigma_xy + C2)
   denominator <- (mu_x^2 + mu_y^2 + C1) * (sigma_x^2 + sigma_y^2 + C2)
@@ -55,35 +117,50 @@ compute_ssim <- function(reference, estimate, C1 = 0.0001, C2 = 0.0009) {
   numerator / denominator
 }
 
-#' Evaluate Reconstruction Quality
+#' Compute Relative Error
 #'
-#' Compute multiple evaluation metrics for reconstruction quality assessment.
+#' RelError = ||estimate - reference||_F / ||reference||_F
 #'
-#' @param reference Reference (ground truth) data
-#' @param estimate Reconstructed/estimated data
-#' @param metrics Character vector of metrics to compute
-#' @return Named list of metric values
+#' @param reference Reference SeismicDataset
+#' @param estimate Estimated SeismicDataset
+#' @return Relative Frobenius norm error
+#'
 #' @export
+compute_relative_error <- function(reference, estimate) {
+  diff <- estimate$traces - reference$traces
+  sqrt(sum(diff^2)) / (sqrt(sum(reference$traces^2)) + EPSILON)
+}
+
+#' Evaluate All Metrics
+#'
+#' Compute specified evaluation metrics between reference and estimate.
+#'
+#' @param reference Reference SeismicDataset
+#' @param estimate Estimated SeismicDataset
+#' @param metrics Character vector of metric names (default: all)
+#' @return Named list of metric values
+#'
 #' @examples
-#' ref <- matrix(rnorm(100), 10, 10)
-#' est <- ref + rnorm(100, sd = 0.1)
-#' promethium_evaluate(ref, est)
-promethium_evaluate <- function(reference, estimate,
-                                 metrics = c("snr", "mse", "psnr", "ssim")) {
-  results <- list()
+#' ref <- SeismicDataset(matrix(rnorm(100), 10, 10), dt = 0.004)
+#' est <- SeismicDataset(ref$traces + 0.1 * rnorm(100), dt = 0.004)
+#' metrics <- promethium_evaluate(ref, est)
+#'
+#' @export
+promethium_evaluate <- function(reference, estimate, 
+                                metrics = c("snr", "mse", "psnr", "ssim")) {
+  result <- list()
   
-  if ("snr" %in% metrics) {
-    results$snr <- compute_snr(reference, estimate)
-  }
-  if ("mse" %in% metrics) {
-    results$mse <- compute_mse(reference, estimate)
-  }
-  if ("psnr" %in% metrics) {
-    results$psnr <- compute_psnr(reference, estimate)
-  }
-  if ("ssim" %in% metrics) {
-    results$ssim <- compute_ssim(reference, estimate)
+  for (metric in metrics) {
+    value <- switch(tolower(metric),
+      "snr" = compute_snr(reference, estimate),
+      "mse" = compute_mse(reference, estimate),
+      "psnr" = compute_psnr(reference, estimate),
+      "ssim" = compute_ssim(reference, estimate),
+      "relative_error" = compute_relative_error(reference, estimate),
+      stop("Unknown metric: ", metric)
+    )
+    result[[metric]] <- value
   }
   
-  results
+  result
 }

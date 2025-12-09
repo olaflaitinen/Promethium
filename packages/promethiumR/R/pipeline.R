@@ -1,42 +1,38 @@
-#' RecoveryPipeline Constructor
+#' Recovery Pipeline for Seismic Data
 #'
-#' Create a seismic data recovery pipeline configuration.
+#' Orchestrates preprocessing, model execution, and postprocessing.
+
+#' Create Recovery Pipeline Configuration
 #'
-#' @param name Pipeline preset name
-#' @param config Named list of configuration parameters
+#' @param preprocessing List of preprocessing step names
+#' @param model_type Model type: "matrix_completion", "fista", "wiener"
+#' @param model_config Named list of model parameters
+#' @param postprocessing List of postprocessing step names
 #' @return RecoveryPipeline S3 object
+#'
+#' @examples
+#' pipeline <- promethium_pipeline(
+#'   model_type = "matrix_completion",
+#'   model_config = list(lambda = 0.1, max_iter = 50)
+#' )
+#'
 #' @export
-RecoveryPipeline <- function(name, config = list()) {
-  stopifnot(is.character(name), length(name) == 1)
-  
-  # Set default configuration
-  default_config <- list(
-    preprocessing = list(
-      normalize = TRUE,
-      normalize_method = "rms",
-      bandpass = FALSE,
-      bandpass_low = 5,
-      bandpass_high = 80
-    ),
-    model = list(
-      type = "matrix_completion",
-      lambda = 0.1,
-      max_iter = 100,
-      tol = 1e-5
-    ),
-    postprocessing = list(
-      denoise = FALSE
-    )
-  )
-  
-  # Merge with user config
-  final_config <- modifyList(default_config, config)
+promethium_pipeline <- function(preprocessing = c("remove_dc"),
+                                model_type = "matrix_completion",
+                                model_config = list(),
+                                postprocessing = character(0)) {
+  valid_models <- c("matrix_completion", "fista", "ista", "wiener")
+  if (!model_type %in% valid_models) {
+    stop("Invalid model_type: ", model_type, 
+         ". Must be one of: ", paste(valid_models, collapse = ", "))
+  }
   
   structure(
     list(
-      name = name,
-      config = final_config,
-      version = .promethium_version
+      preprocessing = preprocessing,
+      model_type = model_type,
+      model_config = model_config,
+      postprocessing = postprocessing
     ),
     class = "RecoveryPipeline"
   )
@@ -44,94 +40,149 @@ RecoveryPipeline <- function(name, config = list()) {
 
 #' @export
 print.RecoveryPipeline <- function(x, ...) {
-  cat("RecoveryPipeline:\n")
-  cat(sprintf("  Name: %s\n", x$name))
-  cat(sprintf("  Model: %s\n", x$config$model$type))
-  cat(sprintf("  Version: %s\n", x$version))
+  cat("RecoveryPipeline\n")
+  cat("  Preprocessing:", paste(x$preprocessing, collapse = ", "), "\n")
+  cat("  Model:", x$model_type, "\n")
+  if (length(x$model_config) > 0) {
+    cat("  Config:", paste(names(x$model_config), "=", 
+                           x$model_config, collapse = ", "), "\n")
+  }
+  cat("  Postprocessing:", paste(x$postprocessing, collapse = ", "), "\n")
   invisible(x)
 }
 
-#' Create pipeline from preset
+#' Create Pipeline from Preset
 #'
-#' @param preset_name Name of preset ("matrix_completion", "wiener", "fista")
+#' @param preset Preset name: "matrix_completion", "fista", "wiener"
 #' @return RecoveryPipeline object
+#'
+#' @examples
+#' pipeline <- from_preset("wiener")
+#'
 #' @export
-promethium_pipeline <- function(preset_name) {
-  presets <- list(
-    matrix_completion = list(
-      model = list(type = "matrix_completion", lambda = 0.1, max_iter = 100)
+from_preset <- function(preset) {
+  switch(preset,
+    "matrix_completion" = promethium_pipeline(
+      preprocessing = c("remove_dc"),
+      model_type = "matrix_completion",
+      model_config = list(lambda = 0.1, max_iter = 100, tolerance = 1e-5)
     ),
-    wiener = list(
-      model = list(type = "wiener", noise_var = NULL)
+    "fista" = promethium_pipeline(
+      preprocessing = c("remove_dc"),
+      model_type = "fista",
+      model_config = list(lambda = 0.1, max_iter = 100, tolerance = 1e-5)
     ),
-    fista = list(
-      model = list(type = "compressive_sensing", lambda = 0.1, max_iter = 100)
-    )
+    "wiener" = promethium_pipeline(
+      preprocessing = c("remove_dc"),
+      model_type = "wiener",
+      model_config = list(noise_var = NULL)
+    ),
+    stop("Unknown preset: ", preset)
   )
-  
-  if (!preset_name %in% names(presets)) {
-    stop(sprintf("Unknown preset: %s. Available: %s", 
-                 preset_name, paste(names(presets), collapse = ", ")))
-  }
-  
-  RecoveryPipeline(preset_name, presets[[preset_name]])
 }
 
-#' Run recovery pipeline
+#' Run Recovery Pipeline
+#'
+#' Execute pipeline on seismic data with optional mask for missing data.
 #'
 #' @param pipeline RecoveryPipeline object
-#' @param dataset SeismicDataset object
-#' @param mask Optional observation mask (TRUE = observed)
-#' @param verbose Print progress messages
-#' @return SeismicDataset with recovered traces
+#' @param data SeismicDataset object
+#' @param mask Logical matrix (TRUE = observed, FALSE = missing)
+#' @param verbose Print progress
+#' @return Recovered SeismicDataset
+#'
+#' @examples
+#' ds <- promethium_synthetic(ntraces = 20, nsamples = 100)
+#' pipeline <- from_preset("wiener")
+#' result <- promethium_run(pipeline, ds)
+#'
 #' @export
-promethium_run <- function(pipeline, dataset, mask = NULL, verbose = TRUE) {
-  stopifnot(inherits(pipeline, "RecoveryPipeline"))
-  stopifnot(inherits(dataset, "SeismicDataset"))
-  
-  traces <- dataset$traces
-  cfg <- pipeline$config
-  
-  # Preprocessing
-  if (cfg$preprocessing$normalize) {
-    if (verbose) message("Preprocessing: normalizing traces...")
-    dataset <- normalize.SeismicDataset(dataset, cfg$preprocessing$normalize_method)
-    traces <- dataset$traces
+promethium_run <- function(pipeline, data, mask = NULL, verbose = FALSE) {
+  if (!inherits(pipeline, "RecoveryPipeline")) {
+    stop("`pipeline` must be a RecoveryPipeline object")
+  }
+  if (!inherits(data, "SeismicDataset")) {
+    stop("`data` must be a SeismicDataset object")
   }
   
-  # Recovery
-  model_type <- cfg$model$type
-  if (verbose) message(sprintf("Running model: %s", model_type))
+  result <- data
   
-  result <- switch(model_type,
-    matrix_completion = {
+  # Preprocessing
+  for (step in pipeline$preprocessing) {
+    if (verbose) message("Preprocessing: ", step)
+    result <- switch(step,
+      "remove_dc" = remove_dc(result),
+      "normalize" = normalize(result),
+      { warning("Unknown preprocessing step: ", step); result }
+    )
+  }
+  
+  # Model execution
+  if (verbose) message("Running model: ", pipeline$model_type)
+  
+  cfg <- pipeline$model_config
+  
+  result$traces <- switch(pipeline$model_type,
+    "matrix_completion" = {
       if (is.null(mask)) {
-        mask <- !is.na(traces)
+        mask <- matrix(TRUE, nrow = n_traces(result), ncol = n_samples(result))
       }
-      matrix_completion_ista(traces, mask,
-                              lambda = cfg$model$lambda,
-                              max_iter = cfg$model$max_iter,
-                              tol = cfg$model$tol)
+      matrix_completion_ista(
+        observed = result$traces,
+        mask = mask,
+        lambda = cfg$lambda %||% 0.1,
+        max_iter = cfg$max_iter %||% 100L,
+        tolerance = cfg$tolerance %||% 1e-5,
+        verbose = verbose
+      )
     },
-    wiener = {
-      t(apply(traces, 1, function(row) {
-        wiener_filter(row, cfg$model$noise_var)
-      }))
+    "fista" = {
+      # For FISTA, flatten and use identity measurement matrix
+      n <- n_traces(result) * n_samples(result)
+      y <- as.vector(result$traces)
+      A <- diag(n)
+      x_rec <- compressive_sensing_fista(
+        y = y, A = A,
+        lambda = cfg$lambda %||% 0.1,
+        max_iter = cfg$max_iter %||% 100L,
+        tolerance = cfg$tolerance %||% 1e-5,
+        verbose = verbose
+      )
+      matrix(x_rec, nrow = n_traces(result), ncol = n_samples(result))
     },
-    compressive_sensing = {
-      # For CS, need measurement matrix A
-      # Simplified: treat as denoising per trace
-      t(apply(traces, 1, function(row) {
-        n <- length(row)
-        A <- diag(n)  # Identity for simplicity
-        compressive_sensing_fista(row, A,
-                                   lambda = cfg$model$lambda,
-                                   max_iter = cfg$model$max_iter)
-      }))
+    "ista" = {
+      n <- n_traces(result) * n_samples(result)
+      y <- as.vector(result$traces)
+      A <- diag(n)
+      x_rec <- compressive_sensing_ista(
+        y = y, A = A,
+        lambda = cfg$lambda %||% 0.1,
+        max_iter = cfg$max_iter %||% 100L
+      )
+      matrix(x_rec, nrow = n_traces(result), ncol = n_samples(result))
     },
-    stop(sprintf("Unknown model type: %s", model_type))
+    "wiener" = {
+      wiener_filter(result, noise_var = cfg$noise_var)$traces
+    },
+    stop("Unknown model type: ", pipeline$model_type)
   )
   
-  # Create output dataset
-  SeismicDataset(result, dataset$dt, dataset$coords, dataset$metadata)
+  # Postprocessing
+  for (step in pipeline$postprocessing) {
+    if (verbose) message("Postprocessing: ", step)
+    result <- switch(step,
+      "normalize" = normalize(result),
+      { warning("Unknown postprocessing step: ", step); result }
+    )
+  }
+  
+  result
+}
+
+#' Null-coalescing operator
+#' @param x Primary value
+#' @param y Default value if x is NULL
+#' @return x if not NULL, otherwise y
+`%||%` <- function(x, y) {
+  if (is.null(x)) y else x
 }

@@ -4,6 +4,8 @@ Pipeline orchestration for end-to-end seismic recovery workflows.
 
 # ============== RecoveryPipeline ==============
 
+import Base: run
+
 """
     RecoveryPipeline
 

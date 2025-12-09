@@ -1,10 +1,10 @@
 # Architecture Overview
 
-This document describes the high-level architecture of Promethium as a multi-language seismic data recovery framework.
+This document describes the high-level architecture of Promethium, a state-of-the-art (SoTA) multi-language seismic data recovery framework.
 
 ## Design Philosophy
 
-Promethium is implemented as **four independent native libraries** that share a common mathematical specification but have **no runtime inter-language dependencies**. Each implementation is a first-class citizen in its respective ecosystem.
+Promethium is implemented as **four independent native libraries** that share a common mathematical specification but have **no runtime inter-language dependencies**. Each implementation is a first-class citizen in its respective ecosystem, leveraging SoTA algorithms for seismic reconstruction.
 
 ## Core Principles
 
@@ -54,7 +54,7 @@ flowchart TB
     end
     
     PY --> PYPI["PyPI"]
-    R --> CRAN["CRAN / GitHub"]
+    R --> CRAN["CRAN"]
     JL --> JLREG["Julia Registry"]
     SC --> MVN["Maven Central"]
 ```

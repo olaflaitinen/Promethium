@@ -1,10 +1,19 @@
 # R API Reference
 
-promethiumR provides a native R implementation of the Promethium seismic data recovery framework.
+[![CRAN](https://www.r-pkg.org/badges/version/promethiumR)](https://CRAN.R-project.org/package=promethiumR)
+[![Downloads](https://cranlogs.r-pkg.org/badges/promethiumR)](https://CRAN.R-project.org/package=promethiumR)
+
+promethiumR provides a state-of-the-art (SoTA) native R implementation of the Promethium seismic data recovery framework.
+
+**CRAN Package:** [https://CRAN.R-project.org/package=promethiumR](https://CRAN.R-project.org/package=promethiumR)
 
 ## Installation
 
 ```r
+# From CRAN
+install.packages("promethiumR")
+library(promethiumR)
+
 # From GitHub (development)
 devtools::install_github("olaflaitinen/promethium/packages/promethiumR")
 

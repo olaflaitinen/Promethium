@@ -53,8 +53,11 @@ using Random
 const VERSION = v"1.0.4"
 
 # ============== Core Types ==============
+# ============== Core Types ==============
 export SeismicDataset, VelocityModel, RecoveryPipeline
-export n_traces, n_samples, normalize, time_axis
+export n_traces, n_samples, normalize, time_axis, duration
+export subset_traces, time_window
+export constant_velocity, linear_velocity, nx, nz, interpolate_at
 
 # ============== I/O ==============
 export load_segy, write_segy, synthetic_data, load_hdf5, save_hdf5

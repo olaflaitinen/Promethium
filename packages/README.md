@@ -1,6 +1,6 @@
 # Promethium Multi-Language Packages
 
-This directory contains native implementations of Promethium in multiple programming languages.
+This directory contains state-of-the-art (SoTA) native implementations of Promethium in multiple programming languages.
 
 ## Package Overview
 

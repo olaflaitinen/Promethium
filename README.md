@@ -354,7 +354,9 @@ promethium/
 
 ## Installation and Setup
 
-### PyPI Installation (Recommended)
+Promethium is a state-of-the-art (SoTA) multi-language framework with native implementations in Python, R, Julia, and Scala.
+
+### Python (PyPI - Recommended)
 
 Install Promethium directly from PyPI:
 
@@ -362,35 +364,70 @@ Install Promethium directly from PyPI:
 pip install promethium-seismic==1.0.4
 ```
 
-**PyPI Package:** [https://pypi.org/project/promethium-seismic/1.0.4/](https://pypi.org/project/promethium-seismic/1.0.4/)
-
-This installs the core library with minimal dependencies, suitable for most use cases including Kaggle and Google Colab notebooks.
+**PyPI Package:** [https://pypi.org/project/promethium-seismic/](https://pypi.org/project/promethium-seismic/)
 
 #### Optional Dependencies
 
-Install with visualization support:
-
 ```bash
-pip install promethium-seismic[viz]==1.0.0
+# Visualization support
+pip install promethium-seismic[viz]==1.0.4
+
+# Server components (FastAPI, Celery, Redis)
+pip install promethium-seismic[server]==1.0.4
+
+# All optional dependencies
+pip install promethium-seismic[all]==1.0.4
+
+# Development dependencies
+pip install promethium-seismic[dev]==1.0.4
 ```
 
-Install with server components (FastAPI, Celery, Redis) for backend deployment:
+#### Development Installation (From Source)
 
 ```bash
-pip install promethium-seismic[server]==1.0.0
+git clone https://github.com/olaflaitinen/promethium.git
+cd promethium
+pip install -e ".[dev]"
 ```
 
-Install all optional dependencies:
+### R (CRAN) - Coming Soon
 
-```bash
-pip install promethium-seismic[all]==1.0.0
+The R implementation will be available as `promethiumR`.
+
+**Target CRAN Package:** [https://CRAN.R-project.org/package=promethiumR](https://CRAN.R-project.org/package=promethiumR)
+
+```r
+# Coming soon
+install.packages("promethiumR")
+library(promethiumR)
 ```
 
-Install development dependencies:
+### Julia (General Registry) - Coming Soon
 
-```bash
-pip install promethium-seismic[dev]==1.0.0
+The Julia implementation will be available as `Promethium.jl`.
+
+**Target Julia Package:** [https://juliahub.com/ui/Packages/Promethium](https://juliahub.com/ui/Packages/Promethium)
+
+```julia
+# Coming soon
+using Pkg
+Pkg.add("Promethium")
+using Promethium
 ```
+
+### Scala (Maven Central)
+
+The Scala implementation is available with Maven coordinates `io.github.olaflaitinen:promethium-scala`.
+
+**Maven Central:** [https://central.sonatype.com/artifact/io.github.olaflaitinen/promethium-scala_2.13](https://central.sonatype.com/artifact/io.github.olaflaitinen/promethium-scala_2.13)
+
+```scala
+// Add to build.sbt
+libraryDependencies += "io.github.olaflaitinen" %% "promethium-scala" % "1.0.4"
+```
+
+
+For detailed package distribution and publication information, see [docs/distribution.md](docs/distribution.md).
 
 ## Documentation
 
@@ -404,39 +441,23 @@ For detailed information on the mathematical models, algorithms, and methodologi
 
 ### Kaggle Integration
 
-Promethium is designed to be **Kaggle-native**, supporting both standard PyPI installation and offline/pip-less usage via Kaggle Datasets.
+Promethium supports offline and source-based usage for Kaggle competitions and notebook environments.
 
 **Quick References:**
 *   [Kaggle Integration Guide](docs/kaggle-integration.md) (Full Documentation)
-*   [Pip-less Source Usage Example](notebooks/kaggle/01_pipless_source_dataset_usage.ipynb)
-*   [Offline Wheel Install Example](notebooks/kaggle/02_local_wheel_install.ipynb)
+*   [Source Import Example](notebooks/kaggle/01_pipless_source_dataset_usage.ipynb)
 
-#### Standard PyPI Usage (Network Required)
+#### Source-Based Usage (Recommended for Competitions)
 
-```python
-!pip install promethium-seismic==1.0.4
-import promethium
-```
-
-#### Offline / Pip-less Usage (Competitions)
-
-You can attach the **Promethium Wheel Dataset** or **Source Dataset** to your notebook to use the library without internet access.
+Attach the **Promethium Source Dataset** to your notebook:
 
 ```python
-# Mode A: Pip-less Source Import
 import sys
-sys.path.append("/kaggle/input/promethium-seismic-source-100")
-import promethium
-
-# Mode B: Offline Wheel Install
-!pip install ../input/promethium-seismic-wheel-100/promethium_seismic-1.0.4-py3-none-any.whl
-```
-
-
+sys.path.append("/kaggle/input/promethium-source")
 import promethium
 from promethium import read_segy, SeismicRecoveryPipeline
 
-# Load seismic data (from Kaggle input or uploaded file)
+# Load seismic data
 data = read_segy("/kaggle/input/seismic-dataset/survey.sgy")
 
 # Create and run reconstruction pipeline
@@ -872,8 +893,8 @@ For support options, community resources, and contact information, see [SUPPORT.
 
 ### Quick Links
 
-- **Issue Tracker**: [GitHub Issues](https://github.com/olaflaitinen/promethium/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/olaflaitinen/promethium/discussions)
+- **Issue Tracker**: [GitHub Issues](https://github.com/olaflaitinen/Promethium/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/olaflaitinen/Promethium/discussions)
 - **Documentation**: [docs/](docs/)
 
 ---

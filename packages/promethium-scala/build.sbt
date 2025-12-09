@@ -1,7 +1,9 @@
-ThisBuild / organization := "io.promethium"
+import xerial.sbt.Sonatype._
+
+ThisBuild / organization := "io.github.olaflaitinen"
 ThisBuild / version := "1.0.4"
 ThisBuild / scalaVersion := "2.13.14"
-ThisBuild / crossScalaVersions := Seq("2.13.14", "3.4.2")
+ThisBuild / crossScalaVersions := Seq("2.13.14")
 
 lazy val promethiumScala = (project in file("."))
   .settings(
@@ -52,13 +54,9 @@ lazy val promethiumScala = (project in file("."))
     
     // Publication settings
     publishMavenStyle := true,
-    publishTo := {
-      val nexus = "https://s01.oss.sonatype.org/"
-      if (isSnapshot.value)
-        Some("snapshots" at nexus + "content/repositories/snapshots")
-      else
-        Some("releases" at nexus + "service/local/staging/deploy/maven2")
-    },
+    publishTo := sonatypePublishToBundle.value,
+    sonatypeCredentialHost := "central.sonatype.com",
+
     
     licenses := Seq("CC BY-NC 4.0" -> url("https://creativecommons.org/licenses/by-nc/4.0/")),
     homepage := Some(url("https://github.com/olaflaitinen/Promethium")),
@@ -73,9 +71,9 @@ lazy val promethiumScala = (project in file("."))
     developers := List(
       Developer(
         id = "olaflaitinen",
-        name = "Promethium Contributors",
-        email = "promethium@example.com",
-        url = url("https://github.com/olaflaitinen/Promethium")
+        name = "Olaf Laitinen",
+        email = "olaf.laitinen@gmail.com",
+        url = url("https://github.com/olaflaitinen")
       )
     ),
     

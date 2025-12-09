@@ -98,7 +98,7 @@ See [SECURITY.md](SECURITY.md) for reporting security vulnerabilities.
 
 ## Feature Requests
 
-We welcome feature requests through [GitHub Discussions](https://github.com/olaflaitinen/promethium/discussions) in the Ideas category.
+We welcome feature requests through [GitHub Discussions](https://github.com/olaflaitinen/Promethium/discussions) in the Ideas category.
 
 When proposing a feature:
 

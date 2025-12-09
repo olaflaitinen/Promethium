@@ -1,13 +1,20 @@
 # Scala API Reference
 
-Promethium for Scala provides a native JVM implementation of the seismic data recovery framework.
+# Scala API Reference
+
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.olaflaitinen/promethium-scala_2.13.svg)](https://central.sonatype.com/artifact/io.github.olaflaitinen/promethium-scala_2.13)
+[![Scala](https://img.shields.io/badge/Scala-2.13%20%7C%203.x-red?logo=scala)](https://www.scala-lang.org/)
+
+Promethium for Scala provides a state-of-the-art (SoTA) native JVM implementation of the seismic data recovery framework.
+
+**Maven Central:** [https://central.sonatype.com/artifact/io.github.olaflaitinen/promethium-scala_2.13](https://central.sonatype.com/artifact/io.github.olaflaitinen/promethium-scala_2.13)
 
 ## Installation
 
 Add to your `build.sbt`:
 
 ```scala
-libraryDependencies += "io.promethium" %% "promethium-scala" % "1.0.4"
+libraryDependencies += "io.github.olaflaitinen" %% "promethium-scala" % "1.0.4"
 ```
 
 ## Quick Start

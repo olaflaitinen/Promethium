@@ -1,13 +1,12 @@
-library(testthat)
-library(promethiumR)
+# Tests for core data structures
 
 test_that("SeismicDataset constructor works", {
   traces <- matrix(rnorm(100), nrow = 10, ncol = 10)
   ds <- SeismicDataset(traces, dt = 0.004)
   
   expect_s3_class(ds, "SeismicDataset")
-  expect_equal(ds$n_traces, 10)
-  expect_equal(ds$n_samples, 10)
+  expect_equal(n_traces(ds), 10)
+  expect_equal(n_samples(ds), 10)
   expect_equal(ds$dt, 0.004)
 })
 
@@ -20,7 +19,7 @@ test_that("normalize.SeismicDataset works", {
   traces <- matrix(c(1, 2, 3, 4, 5, 6), nrow = 2, ncol = 3)
   ds <- SeismicDataset(traces, dt = 0.004)
   
-  ds_norm <- normalize.SeismicDataset(ds, method = "rms")
+  ds_norm <- normalize(ds, method = "rms")
   expect_s3_class(ds_norm, "SeismicDataset")
   
   # RMS of each row should be close to 1
@@ -33,6 +32,6 @@ test_that("VelocityModel constructor works", {
   vm <- VelocityModel(grid, dx = 10, dz = 5)
   
   expect_s3_class(vm, "VelocityModel")
-  expect_equal(vm$nx, 10)
-  expect_equal(vm$nz, 10)
+  expect_equal(ncol(vm$velocities), 10)  # nx
+  expect_equal(nrow(vm$velocities), 10)  # nz
 })

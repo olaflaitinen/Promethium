@@ -3,6 +3,7 @@ package io.promethium.signal
 import breeze.linalg._
 import breeze.numerics._
 import breeze.signal._
+import breeze.stats._
 import io.promethium.core.SeismicDataset
 
 /**

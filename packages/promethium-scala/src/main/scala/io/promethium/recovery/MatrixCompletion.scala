@@ -84,10 +84,13 @@ object MatrixCompletion {
       val sThresh = softThreshold(s, lambda / L)
       
       // Reconstruct with thresholded singular values
-      val XNew = u * diag(sThresh) * vt
+      // SVD returns U (m x m), S (k), Vt (n x n)
+      // We need to slice U and Vt to k components for reconstruction
+      val k = sThresh.length
+      val XNew = u(::, 0 until k) * diag(sThresh) * vt(0 until k, ::)
       
       // Check convergence
-      val relChange = norm(XNew - X) / (norm(X) + 1e-10)
+      val relChange = norm((XNew - X).toDenseVector) / (norm(X.toDenseVector) + 1e-10)
       if (relChange < tolerance) {
         converged = true
         if (verbose) println(s"Converged at iteration $iter")

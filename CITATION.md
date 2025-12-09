@@ -7,7 +7,7 @@ If you use Promethium in your research, publications, or projects, please cite i
 ### Plain Text
 
 ```
-Laitinen Imanov, O. Y. (2025). Promethium: Advanced Seismic Data Recovery and Reconstruction Framework (Version 1.0.0) [Computer software]. https://github.com/olaflaitinen/promethium
+Laitinen Imanov, O. Y. (2025). Promethium: Advanced Seismic Data Recovery and Reconstruction Framework (Version 1.0.0) [Computer software]. https://github.com/olaflaitinen/Promethium
 ```
 
 ### BibTeX
@@ -19,7 +19,7 @@ Laitinen Imanov, O. Y. (2025). Promethium: Advanced Seismic Data Recovery and Re
   year         = {2025},
   version      = {1.0.0},
   publisher    = {GitHub},
-  url          = {https://github.com/olaflaitinen/promethium},
+  url          = {https://github.com/olaflaitinen/Promethium},
   note         = {Software for seismic signal reconstruction using AI/ML techniques}
 }
 ```
@@ -27,13 +27,13 @@ Laitinen Imanov, O. Y. (2025). Promethium: Advanced Seismic Data Recovery and Re
 ### APA Format
 
 ```
-Laitinen Imanov, O. Y. (2025). Promethium: Advanced seismic data recovery and reconstruction framework (Version 1.0.0) [Computer software]. GitHub. https://github.com/olaflaitinen/promethium
+Laitinen Imanov, O. Y. (2025). Promethium: Advanced seismic data recovery and reconstruction framework (Version 1.0.0) [Computer software]. GitHub. https://github.com/olaflaitinen/Promethium
 ```
 
 ### IEEE Format
 
 ```
-O. Y. Laitinen Imanov, "Promethium: Advanced Seismic Data Recovery and Reconstruction Framework," version 1.0.0, 2025. [Online]. Available: https://github.com/olaflaitinen/promethium
+O. Y. Laitinen Imanov, "Promethium: Advanced Seismic Data Recovery and Reconstruction Framework," version 1.0.0, 2025. [Online]. Available: https://github.com/olaflaitinen/Promethium
 ```
 
 ## Citing Specific Versions
@@ -47,7 +47,7 @@ When citing a specific version of Promethium, include the version number and cor
   year         = {2025},
   version      = {1.0.0},
   doi          = {10.5281/zenodo.XXXXXXX},
-  url          = {https://github.com/olaflaitinen/promethium/releases/tag/v1.0.0}
+  url          = {https://github.com/olaflaitinen/Promethium/releases/tag/v1.0.0}
 }
 ```
 
@@ -63,7 +63,7 @@ If your work primarily uses a specific component or model from Promethium, you m
   title        = {{Promethium U-Net Seismic Reconstruction Model}},
   year         = {2025},
   version      = {1.0.0},
-  url          = {https://github.com/olaflaitinen/promethium},
+  url          = {https://github.com/olaflaitinen/Promethium},
   note         = {Part of the Promethium framework for seismic data recovery}
 }
 ```
@@ -76,7 +76,7 @@ If your work primarily uses a specific component or model from Promethium, you m
   title        = {{Promethium Physics-Informed Neural Network for Seismic Reconstruction}},
   year         = {2025},
   version      = {1.0.0},
-  url          = {https://github.com/olaflaitinen/promethium},
+  url          = {https://github.com/olaflaitinen/Promethium},
   note         = {PINN component of the Promethium framework}
 }
 ```

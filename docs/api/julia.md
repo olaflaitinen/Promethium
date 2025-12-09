@@ -1,15 +1,20 @@
 # Julia API Reference
 
-Promethium.jl provides a native Julia implementation of the seismic data recovery framework.
+# Julia API Reference
+
+[![Julia](https://img.shields.io/badge/Julia-1.9+-9558B2?logo=julia)](https://julialang.org/)
+[![Registry](https://img.shields.io/badge/Registry-General-green)](https://github.com/JuliaRegistries/General)
+
+Promethium.jl provides a state-of-the-art (SoTA) native Julia implementation of the seismic data recovery framework.
+
+**Julia Package:** [https://juliahub.com/ui/Packages/Promethium](https://juliahub.com/ui/Packages/Promethium)
 
 ## Installation
 
 ```julia
 using Pkg
-Pkg.add("Promethium")  # When registered in General registry
-
-# Or from source:
-Pkg.develop(path="packages/Promethium.jl")
+Pkg.add("Promethium")
+using Promethium
 ```
 
 ## Quick Start

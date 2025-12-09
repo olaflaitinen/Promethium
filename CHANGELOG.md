@@ -8,6 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- Multi-language architecture with native R, Julia, and Scala implementations
+- Package distribution documentation (`docs/distribution.md`)
+- R package `promethiumR` ready for CRAN submission
+- Julia package `Promethium.jl` ready for General registry registration
+- Scala package `promethium-scala` ready for Maven Central publication
 - State-of-the-art physics-informed neural network (PINN) architecture for wave-equation-constrained reconstruction
 - Cutting-edge transformer-based model for long-range spatial dependency modeling in seismic gathers
 - Multi-GPU training support for distributed model training

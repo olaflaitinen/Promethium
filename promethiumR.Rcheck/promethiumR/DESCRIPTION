@@ -3,10 +3,10 @@ Type: Package
 Title: Advanced Seismic Data Recovery and Reconstruction Framework
 Version: 1.0.4
 Authors@R: c(
-    person("Olaf", "Laitinen", email = "olaf.laitinen@gmail.com", 
+    person("Promethium", "Contributors", email = "promethium@example.com", 
            role = c("aut", "cre")))
-Author: Olaf Laitinen
-Maintainer: Olaf Laitinen <olaf.laitinen@gmail.com>
+Author: Promethium Contributors
+Maintainer: Promethium Contributors <promethium@example.com>
 Description: Native R implementation of the Promethium framework for seismic 
     data recovery and reconstruction. Provides algorithms for missing trace 
     interpolation, denoising, and signal reconstruction using classical signal 
@@ -22,16 +22,9 @@ Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3
-Depends: 
-    R (>= 4.0.0)
-Imports:
-    stats,
-    graphics,
-    methods
-Suggests:
-    testthat (>= 3.0.0),
-    knitr,
-    rmarkdown,
-    hdf5r
+Depends: R (>= 4.0.0)
+Imports: stats, graphics, methods
+Suggests: testthat (>= 3.0.0), knitr, rmarkdown, hdf5r
 VignetteBuilder: knitr
 Config/testthat/edition: 3
+Built: R 4.5.2; ; 2025-12-09 20:58:13 UTC; windows

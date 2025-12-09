@@ -182,6 +182,33 @@ def compute_snr(signal: np.ndarray, noise: np.ndarray) -> float:
 - Avoid magic numbers; use named constants.
 - Handle errors explicitly.
 
+### Multi-Language Contributions
+
+Promethium maintains native implementations in R, Julia, and Scala alongside Python. When contributing algorithmic changes:
+
+**R (`packages/promethiumR/`):**
+- Use roxygen2 for documentation
+- Run `devtools::check()` before submitting
+- Follow tidyverse style guidelines
+- Tests use testthat framework
+
+**Julia (`packages/Promethium.jl/`):**
+- Use Julia docstrings for documentation
+- Run `Pkg.test()` before submitting
+- Follow Julia style guide conventions
+- Tests use Test.jl framework
+
+**Scala (`packages/promethium-scala/`):**
+- Use ScalaDoc for documentation
+- Run `sbt test` before submitting
+- Follow Scala style guide
+- Tests use ScalaTest framework
+
+**Cross-Language Consistency:**
+- Algorithmic changes must be reflected in all four implementations
+- Numerical results must match within defined tolerances
+- Update shared test vectors in `testdata/` when adding new functionality
+
 ---
 
 ## Testing Requirements

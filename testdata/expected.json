@@ -1,0 +1,27 @@
+{
+    "version": "1.0.4",
+    "generated": "2025-12-09",
+    "description": "Expected metric values for cross-language validation",
+    "tolerance": {
+        "snr_db": 0.01,
+        "mse_relative": 1e-8,
+        "psnr_db": 0.01,
+        "ssim_absolute": 1e-4
+    },
+    "test_cases": {
+        "noisy_data": {
+            "snr": 10.234,
+            "mse": 0.00456,
+            "psnr": 25.89,
+            "ssim": 0.872
+        },
+        "matrix_completion": {
+            "relative_error": 0.15,
+            "rank_estimate": 3
+        },
+        "wiener_denoising": {
+            "snr_improvement_db": 5.5,
+            "output_snr": 15.7
+        }
+    }
+}

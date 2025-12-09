@@ -359,10 +359,10 @@ promethium/
 Install Promethium directly from PyPI:
 
 ```bash
-pip install promethium-seismic==1.0.3
+pip install promethium-seismic==1.0.4
 ```
 
-**PyPI Package:** [https://pypi.org/project/promethium-seismic/1.0.3/](https://pypi.org/project/promethium-seismic/1.0.3/)
+**PyPI Package:** [https://pypi.org/project/promethium-seismic/1.0.4/](https://pypi.org/project/promethium-seismic/1.0.4/)
 
 This installs the core library with minimal dependencies, suitable for most use cases including Kaggle and Google Colab notebooks.
 
@@ -405,7 +405,7 @@ Promethium is designed to be **Kaggle-native**, supporting both standard PyPI in
 #### Standard PyPI Usage (Network Required)
 
 ```python
-!pip install promethium-seismic==1.0.3
+!pip install promethium-seismic==1.0.4
 import promethium
 ```
 
@@ -420,7 +420,7 @@ sys.path.append("/kaggle/input/promethium-seismic-source-100")
 import promethium
 
 # Mode B: Offline Wheel Install
-!pip install ../input/promethium-seismic-wheel-100/promethium_seismic-1.0.3-py3-none-any.whl
+!pip install ../input/promethium-seismic-wheel-100/promethium_seismic-1.0.4-py3-none-any.whl
 ```
 
 

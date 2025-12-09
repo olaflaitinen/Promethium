@@ -28,7 +28,7 @@ if PYDANTIC_SETTINGS_AVAILABLE:
         Reads from environment variables and .env file.
         """
         APP_NAME: str = "Promethium"
-        APP_VERSION: str = "1.0.3"
+        APP_VERSION: str = "1.0.4"
         DEBUG: bool = False
         
         # API
@@ -66,7 +66,7 @@ else:
         """
         def __init__(self):
             self.APP_NAME = "Promethium"
-            self.APP_VERSION = "1.0.3"
+            self.APP_VERSION = "1.0.4"
             self.DEBUG = os.environ.get("DEBUG", "false").lower() in ("true", "1", "yes")
             
             self.API_HOST = "0.0.0.0"

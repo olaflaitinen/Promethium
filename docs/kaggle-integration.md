@@ -13,54 +13,33 @@ To use Promethium without downloading it from PyPI every time (or for offline co
 ### A. Wheel Dataset (Recommended for Stability)
 This dataset contains the pre-built `.whl` file.
 
-*   **Dataset Name**: `promethium-seismic-wheel-1.0.3` (or current version)
+*   **Dataset Name**: `promethium-seismic-wheel-1.0.4` (or current version)
 *   **Contents**:
-    *   `promethium_seismic-1.0.3-py3-none-any.whl`
+    *   `promethium_seismic-1.0.4-py3-none-any.whl`
 *   **Path in Kernel**: `../input/promethium-seismic-wheel-100/`
 
 ### B. Source Dataset (Recommended for Development)
 This dataset contains the raw source code.
 
-*   **Dataset Name**: `promethium-seismic-source-1.0.3`
+*   **Dataset Name**: `promethium-seismic-source-1.0.4`
 *   **Contents**:
     *   `promethium/` (The package directory)
 *   **Path in Kernel**: `../input/promethium-seismic-source-100/`
 
 ---
 
-## 2. Usage Patterns
+## Notebook Templates
 
-### Mode A: Standard PyPI (Network Required)
-If your notebook has internet access, you can simply install from PyPI.
+We provide a **Universal Loader** notebook that handles all scenarios automatically.
 
-```python
-!pip install promethium-seismic==1.0.3
-import promethium
-```
+### `03_auto_fallback_import.ipynb`
+This notebook implements a robust hybrid import strategy:
+1.  **Online/Dev**: Checks for standard `pip install`.
+2.  **Offline Wheel**: Automatically installs from the attached Wheel Dataset.
+3.  **Source Fallback**: Automatically adds the Source Dataset to `sys.path`.
 
-### Mode B: Offline Wheel Install (No Network)
-Fastest installation method. Does not require internet.
-
-```python
-# Install from the attached Wheel dataset
-!pip install ../input/promethium-seismic-wheel-100/promethium_seismic-1.0.3-py3-none-any.whl
-
-import promethium
-```
-
-### Mode C: Pip-less Source Import (Zero Install)
-Directly import the code from the dataset source. Useful if you want to modify code on the fly or avoid any installation overhead.
-
-```python
-import sys
-
-# Add the dataset path to sys.path
-SOURCE_ROOT = "/kaggle/input/promethium-seismic-source-100"
-if SOURCE_ROOT not in sys.path:
-    sys.path.append(SOURCE_ROOT)
-
-import promethium
-```
+**Usage**:
+Copy the `load_promethium()` function from this notebook into your own Kaggle kernel. This ensures your code works seamlessly across local development and Kaggle's offline environment.
 
 ---
 

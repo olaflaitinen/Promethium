@@ -78,12 +78,8 @@ jobs:
       with:
         python-version: "3.10"
         
-    - name: Install twine
-      run: pip install twine
-        
     - name: Publish to PyPI
-      run: twine upload dist/*
-      env:
-        TWINE_USERNAME: __token__
-        TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        password: ${{ secrets.PYPI_API_TOKEN }}
 

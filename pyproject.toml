@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "promethium-seismic"
-version = "1.0.3"
+version = "1.0.4"
 description = "Promethium - Advanced Seismic Data Recovery and Reconstruction Framework. State-of-the-art AI-driven framework for seismic signal reconstruction, denoising, and geophysical data enhancement."
 authors = [{name = "Olaf Yunus Laitinen Imanov", email = "contact@promethium.dev"}]
 readme = "README.md"
@@ -51,6 +51,9 @@ dependencies = [
     "scikit-learn>=1.2.0",
     "pyyaml>=6.0",
     "tqdm>=4.65.0",
+    "zarr>=2.12.0",
+    "PyWavelets>=1.4.0",
+    "requests>=2.25.0",
 ]
 
 [project.optional-dependencies]

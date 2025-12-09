@@ -4,17 +4,15 @@ import breeze.linalg._
 import breeze.numerics._
 
 /**
- * Matrix completion algorithms for seismic data recovery.
+ * Matrix completion algorithms for missing trace recovery.
  *
- * Implements ISTA (Iterative Shrinkage-Thresholding Algorithm) for
- * nuclear norm regularized matrix completion following the Promethium specification.
+ * Implements nuclear norm minimization via iterative singular
+ * value thresholding for low-rank matrix reconstruction.
  */
 object MatrixCompletion {
   
   /**
-   * Soft thresholding operator.
-   *
-   * S_τ(x) = sign(x) * max(|x| - τ, 0)
+   * Soft thresholding operator for scalars.
    */
   private def softThreshold(x: Double, tau: Double): Double = {
     if (x > tau) x - tau
@@ -23,67 +21,95 @@ object MatrixCompletion {
   }
   
   /**
-   * Matrix completion via ISTA with nuclear norm regularization.
+   * Soft thresholding for vectors.
+   */
+  private def softThreshold(x: DenseVector[Double], tau: Double): DenseVector[Double] = {
+    x.map(v => softThreshold(v, tau))
+  }
+  
+  /**
+   * Matrix completion via Iterative Shrinkage-Thresholding Algorithm (ISTA).
    *
-   * Solves: min_X (1/2)||P_Ω(X - M)||_F² + λ||X||_*
+   * Solves: min_X (1/2)||P_Omega(X - M)||_F^2 + lambda ||X||_*
    *
-   * @param M        Observed matrix (use Double.NaN for missing entries)
-   * @param mask     Boolean matrix (true = observed)
-   * @param lambda   Regularization parameter
-   * @param maxIter  Maximum number of iterations
-   * @param tol      Convergence tolerance
+   * where ||X||_* is the nuclear norm (sum of singular values).
+   *
+   * @param observed  Observed matrix (missing entries can be any value)
+   * @param mask      Boolean mask (true = observed, false = missing)
+   * @param lambda    Regularization parameter for nuclear norm
+   * @param maxIter   Maximum number of iterations
+   * @param tolerance Convergence tolerance
+   * @param verbose   Print iteration progress
    * @return Completed matrix
    */
-  def ista(M: DenseMatrix[Double],
-           mask: DenseMatrix[Boolean],
-           lambda: Double = 0.1,
-           maxIter: Int = 100,
-           tol: Double = 1e-5): DenseMatrix[Double] = {
+  def ista(
+    observed: DenseMatrix[Double],
+    mask: DenseMatrix[Boolean],
+    lambda: Double = 0.1,
+    maxIter: Int = 100,
+    tolerance: Double = 1e-5,
+    verbose: Boolean = false
+  ): DenseMatrix[Double] = {
+    require(observed.rows == mask.rows && observed.cols == mask.cols,
+      "Observed matrix and mask must have same dimensions")
     
-    require(M.rows == mask.rows && M.cols == mask.cols,
-            "Matrix and mask must have same dimensions")
+    val m = observed.rows
+    val n = observed.cols
     
-    // Initialize
-    val X = M.copy
-    for (i <- 0 until X.rows; j <- 0 until X.cols) {
-      if (!mask(i, j) || X(i, j).isNaN) X(i, j) = 0.0
+    // Initialize with observed values, zeros elsewhere
+    var X = DenseMatrix.zeros[Double](m, n)
+    for (i <- 0 until m; j <- 0 until n) {
+      if (mask(i, j)) X(i, j) = observed(i, j)
     }
     
-    val L = 1.0  // Lipschitz constant
+    // Lipschitz constant (1.0 for projection operator)
+    val L = 1.0
+    
     var converged = false
     var iter = 0
     
     while (!converged && iter < maxIter) {
-      // Gradient step
-      val grad = DenseMatrix.zeros[Double](M.rows, M.cols)
-      for (i <- 0 until M.rows; j <- 0 until M.cols) {
-        if (mask(i, j) && !M(i, j).isNaN) {
-          grad(i, j) = X(i, j) - M(i, j)
+      // Gradient step: gradient of data fidelity term
+      val grad = DenseMatrix.zeros[Double](m, n)
+      for (i <- 0 until m; j <- 0 until n) {
+        if (mask(i, j)) {
+          grad(i, j) = X(i, j) - observed(i, j)
         }
       }
+      
       val Z = X - (1.0 / L) * grad
       
-      // SVD soft-thresholding (proximal of nuclear norm)
-      val svdResult = svd(Z)
-      val sThresh = svdResult.singularValues.map(s => softThreshold(s, lambda / L))
+      // Proximal step: singular value soft thresholding
+      val svd.SVD(u, s, vt) = svd(Z)
+      val sThresh = softThreshold(s, lambda / L)
       
-      val Xnew = svdResult.U * diag(sThresh) * svdResult.Vt
+      // Reconstruct with thresholded singular values
+      val XNew = u * diag(sThresh) * vt
       
       // Check convergence
-      val relChange = norm(Xnew - X) / (norm(X) + 1e-10)
-      if (relChange < tol) {
+      val relChange = norm(XNew - X) / (norm(X) + 1e-10)
+      if (relChange < tolerance) {
         converged = true
-        println(s"ISTA converged at iteration $iter")
+        if (verbose) println(s"Converged at iteration $iter")
       }
       
-      X := Xnew
+      X = XNew
       iter += 1
     }
     
-    if (!converged) {
-      println(s"ISTA did not converge within $maxIter iterations")
+    if (verbose && !converged) {
+      println(s"Did not converge within $maxIter iterations")
     }
     
     X
   }
+  
+  /**
+   * Configuration for matrix completion.
+   */
+  final case class Config(
+    lambda: Double = 0.1,
+    maxIter: Int = 100,
+    tolerance: Double = 1e-5
+  )
 }

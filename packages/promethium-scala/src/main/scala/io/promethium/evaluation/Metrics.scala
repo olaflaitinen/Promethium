@@ -2,128 +2,169 @@ package io.promethium.evaluation
 
 import breeze.linalg._
 import breeze.numerics._
+import breeze.stats._
+import io.promethium.core.SeismicDataset
 
 /**
- * Evaluation metrics for seismic reconstruction quality assessment.
+ * Evaluation metrics for seismic data reconstruction quality.
  *
- * Implements SNR, MSE, PSNR, SSIM following the Promethium specification
- * for cross-language numerical consistency.
+ * All metrics follow the Promethium specification for cross-language
+ * consistency with Python, R, and Julia implementations.
  */
 object Metrics {
   
   private val EPSILON = 1e-10
   
   /**
-   * Compute Signal-to-Noise Ratio in decibels.
+   * Compute Signal-to-Noise Ratio in dB.
    *
-   * SNR = 10 * log10(signal_power / noise_power)
+   * SNR = 10 * log10(P_signal / P_noise)
    *
    * @param reference Ground truth signal
-   * @param estimate  Reconstructed signal
-   * @return SNR value in dB
+   * @param estimate  Estimated/reconstructed signal
+   * @return SNR in decibels
    */
   def computeSNR(reference: DenseMatrix[Double], 
                  estimate: DenseMatrix[Double]): Double = {
     require(reference.rows == estimate.rows && reference.cols == estimate.cols,
-            "Matrices must have same dimensions")
+      "Reference and estimate must have same dimensions")
     
-    val signalPower = sum(reference *:* reference) / reference.size.toDouble
-    val noise = reference - estimate
-    val noisePower = sum(noise *:* noise) / noise.size.toDouble
+    val refVec = reference.toDenseVector
+    val estVec = estimate.toDenseVector
     
-    10 * log10(signalPower / (noisePower + EPSILON))
+    val signalPower = mean(refVec *:* refVec)
+    val noise = refVec - estVec
+    val noisePower = mean(noise *:* noise)
+    
+    10.0 * math.log10(signalPower / (noisePower + EPSILON))
+  }
+  
+  /**
+   * Compute SNR between SeismicDatasets.
+   */
+  def computeSNR(reference: SeismicDataset, estimate: SeismicDataset): Double = {
+    computeSNR(reference.traces, estimate.traces)
   }
   
   /**
    * Compute Mean Squared Error.
    *
+   * MSE = mean((reference - estimate)^2)
+   *
    * @param reference Ground truth signal
-   * @param estimate  Reconstructed signal
+   * @param estimate  Estimated signal
    * @return MSE value
    */
   def computeMSE(reference: DenseMatrix[Double], 
                  estimate: DenseMatrix[Double]): Double = {
+    require(reference.rows == estimate.rows && reference.cols == estimate.cols,
+      "Reference and estimate must have same dimensions")
+    
     val diff = reference - estimate
-    sum(diff *:* diff) / diff.size.toDouble
+    mean(diff.toDenseVector *:* diff.toDenseVector)
+  }
+  
+  def computeMSE(reference: SeismicDataset, estimate: SeismicDataset): Double = {
+    computeMSE(reference.traces, estimate.traces)
   }
   
   /**
-   * Compute Peak Signal-to-Noise Ratio in decibels.
+   * Compute Peak Signal-to-Noise Ratio in dB.
    *
    * PSNR = 10 * log10(max_val^2 / MSE)
    *
    * @param reference Ground truth signal
-   * @param estimate  Reconstructed signal
-   * @return PSNR value in dB
+   * @param estimate  Estimated signal
+   * @return PSNR in decibels
    */
   def computePSNR(reference: DenseMatrix[Double], 
                   estimate: DenseMatrix[Double]): Double = {
-    val mse = computeMSE(reference, estimate)
     val maxVal = max(abs(reference))
-    10 * log10(maxVal * maxVal / (mse + EPSILON))
+    val mse = computeMSE(reference, estimate)
+    10.0 * math.log10(maxVal * maxVal / (mse + EPSILON))
+  }
+  
+  def computePSNR(reference: SeismicDataset, estimate: SeismicDataset): Double = {
+    computePSNR(reference.traces, estimate.traces)
   }
   
   /**
-   * Compute Structural Similarity Index.
+   * Compute Structural Similarity Index (SSIM).
    *
-   * Simplified global SSIM for cross-language comparison.
+   * Simplified SSIM based on luminance and contrast components.
    *
    * @param reference Ground truth signal
-   * @param estimate  Reconstructed signal
-   * @param C1        Stability constant (default 0.0001)
-   * @param C2        Stability constant (default 0.0009)
-   * @return SSIM value in [0, 1]
+   * @param estimate  Estimated signal
+   * @return SSIM value in [-1, 1]
    */
-  def computeSSIM(reference: DenseMatrix[Double],
-                  estimate: DenseMatrix[Double],
-                  C1: Double = 0.0001,
-                  C2: Double = 0.0009): Double = {
+  def computeSSIM(reference: DenseMatrix[Double], 
+                  estimate: DenseMatrix[Double]): Double = {
+    require(reference.rows == estimate.rows && reference.cols == estimate.cols,
+      "Reference and estimate must have same dimensions")
+    
     val refVec = reference.toDenseVector
     val estVec = estimate.toDenseVector
     
     val muX = mean(refVec)
     val muY = mean(estVec)
-    
-    val sigmaX = sqrt(variance(refVec))
-    val sigmaY = sqrt(variance(estVec))
+    val sigmaX = stddev(refVec)
+    val sigmaY = stddev(estVec)
     
     // Covariance
-    val sigmaXY = {
-      val centeredX = refVec - muX
-      val centeredY = estVec - muY
-      sum(centeredX *:* centeredY) / (refVec.length - 1).toDouble
-    }
+    val covXY = mean((refVec - muX) *:* (estVec - muY))
     
-    val numerator = (2 * muX * muY + C1) * (2 * sigmaXY + C2)
+    // Stability constants
+    val C1 = 0.01 * 0.01
+    val C2 = 0.03 * 0.03
+    
+    // SSIM formula
+    val numerator = (2 * muX * muY + C1) * (2 * covXY + C2)
     val denominator = (muX * muX + muY * muY + C1) * (sigmaX * sigmaX + sigmaY * sigmaY + C2)
     
     numerator / denominator
   }
   
+  def computeSSIM(reference: SeismicDataset, estimate: SeismicDataset): Double = {
+    computeSSIM(reference.traces, estimate.traces)
+  }
+  
   /**
-   * Compute multiple evaluation metrics.
+   * Compute all metrics between reference and estimate.
    *
-   * @param reference Ground truth signal
-   * @param estimate  Reconstructed signal
-   * @param metrics   Sequence of metric names to compute
-   * @return Map of metric name to value
+   * @param reference    Ground truth dataset
+   * @param estimate     Estimated dataset
+   * @param metricNames  List of metrics to compute
+   * @return Map of metric names to values
    */
-  def evaluate(reference: DenseMatrix[Double],
-               estimate: DenseMatrix[Double],
-               metrics: Seq[String] = Seq("snr", "mse", "psnr", "ssim")): Map[String, Double] = {
-    metrics.map {
-      case "snr" => "snr" -> computeSNR(reference, estimate)
-      case "mse" => "mse" -> computeMSE(reference, estimate)
-      case "psnr" => "psnr" -> computePSNR(reference, estimate)
-      case "ssim" => "ssim" -> computeSSIM(reference, estimate)
-      case other => throw new IllegalArgumentException(s"Unknown metric: $other")
+  def evaluate(
+    reference: SeismicDataset,
+    estimate: SeismicDataset,
+    metricNames: Seq[String] = Seq("snr", "mse", "psnr", "ssim")
+  ): Map[String, Double] = {
+    metricNames.map { name =>
+      val value = name.toLowerCase match {
+        case "snr" => computeSNR(reference, estimate)
+        case "mse" => computeMSE(reference, estimate)
+        case "psnr" => computePSNR(reference, estimate)
+        case "ssim" => computeSSIM(reference, estimate)
+        case _ => throw new IllegalArgumentException(s"Unknown metric: $name")
+      }
+      name.toLowerCase -> value
     }.toMap
   }
   
-  // Helper for variance calculation
-  private def variance(v: DenseVector[Double]): Double = {
-    val mu = mean(v)
-    val centered = v - mu
-    sum(centered *:* centered) / (v.length - 1).toDouble
+  /**
+   * Compute relative reconstruction error.
+   *
+   * RelError = ||estimate - reference||_F / ||reference||_F
+   *
+   * @param reference Ground truth
+   * @param estimate  Estimated signal
+   * @return Relative Frobenius norm error
+   */
+  def relativeError(reference: DenseMatrix[Double], 
+                    estimate: DenseMatrix[Double]): Double = {
+    val diff = estimate - reference
+    norm(diff.toDenseVector) / (norm(reference.toDenseVector) + EPSILON)
   }
 }

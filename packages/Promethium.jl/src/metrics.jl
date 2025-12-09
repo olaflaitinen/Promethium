@@ -1,85 +1,128 @@
 """
-Evaluation metrics for Promethium.jl
-
-Implements SNR, MSE, PSNR, SSIM following the Promethium specification.
+Evaluation metrics for seismic data reconstruction quality.
 """
 
-"""
-    compute_snr(reference, estimate) -> Float64
+const EPSILON = 1e-10
 
-Compute Signal-to-Noise Ratio in decibels (dB).
-
-# Formula
-SNR = 10 * log10(signal_power / noise_power)
 """
-function compute_snr(reference::AbstractArray, estimate::AbstractArray)
-    signal_power = mean(reference.^2)
-    noise_power = mean((reference .- estimate).^2)
-    10 * log10(signal_power / (noise_power + 1e-10))
+    compute_snr(reference::SeismicDataset, estimate::SeismicDataset) -> Float64
+
+Compute Signal-to-Noise Ratio in dB.
+
+SNR = 10 * log10(P_signal / P_noise)
+"""
+function compute_snr(reference::SeismicDataset, estimate::SeismicDataset)
+    @assert size(reference.traces) == size(estimate.traces) "Dimension mismatch"
+    
+    ref = vec(reference.traces)
+    est = vec(estimate.traces)
+    
+    signal_power = mean(ref .^ 2)
+    noise = ref .- est
+    noise_power = mean(noise .^ 2)
+    
+    10.0 * log10(signal_power / (noise_power + EPSILON))
 end
 
 """
-    compute_mse(reference, estimate) -> Float64
+    compute_mse(reference::SeismicDataset, estimate::SeismicDataset) -> Float64
 
 Compute Mean Squared Error.
 """
-compute_mse(reference::AbstractArray, estimate::AbstractArray) = 
-    mean((reference .- estimate).^2)
-
-"""
-    compute_psnr(reference, estimate) -> Float64
-
-Compute Peak Signal-to-Noise Ratio in decibels (dB).
-
-# Formula
-PSNR = 10 * log10(max_val^2 / MSE)
-"""
-function compute_psnr(reference::AbstractArray, estimate::AbstractArray)
-    mse = compute_mse(reference, estimate)
-    max_val = maximum(abs, reference)
-    10 * log10(max_val^2 / (mse + 1e-10))
+function compute_mse(reference::SeismicDataset, estimate::SeismicDataset)
+    @assert size(reference.traces) == size(estimate.traces) "Dimension mismatch"
+    
+    diff = reference.traces .- estimate.traces
+    mean(diff .^ 2)
 end
 
 """
-    compute_ssim(reference, estimate; C1=0.0001, C2=0.0009) -> Float64
+    compute_psnr(reference::SeismicDataset, estimate::SeismicDataset) -> Float64
+
+Compute Peak Signal-to-Noise Ratio in dB.
+"""
+function compute_psnr(reference::SeismicDataset, estimate::SeismicDataset)
+    max_val = maximum(abs.(reference.traces))
+    mse = compute_mse(reference, estimate)
+    10.0 * log10(max_val^2 / (mse + EPSILON))
+end
+
+"""
+    compute_ssim(reference::SeismicDataset, estimate::SeismicDataset) -> Float64
 
 Compute Structural Similarity Index.
 
-Simplified implementation for comparison with other languages.
+Simplified SSIM based on luminance and contrast components.
 """
-function compute_ssim(reference::AbstractArray, estimate::AbstractArray;
-                      C1::Float64=0.0001, C2::Float64=0.0009)
-    μ_x = mean(reference)
-    μ_y = mean(estimate)
-    σ_x = std(vec(reference))
-    σ_y = std(vec(estimate))
-    σ_xy = cov(vec(reference), vec(estimate))
+function compute_ssim(reference::SeismicDataset, estimate::SeismicDataset)
+    @assert size(reference.traces) == size(estimate.traces) "Dimension mismatch"
     
-    numerator = (2 * μ_x * μ_y + C1) * (2 * σ_xy + C2)
-    denominator = (μ_x^2 + μ_y^2 + C1) * (σ_x^2 + σ_y^2 + C2)
+    x = vec(reference.traces)
+    y = vec(estimate.traces)
+    
+    mu_x = mean(x)
+    mu_y = mean(y)
+    sigma_x = std(x)
+    sigma_y = std(y)
+    sigma_xy = mean((x .- mu_x) .* (y .- mu_y))
+    
+    # Stability constants
+    C1 = 0.01^2
+    C2 = 0.03^2
+    
+    numerator = (2 * mu_x * mu_y + C1) * (2 * sigma_xy + C2)
+    denominator = (mu_x^2 + mu_y^2 + C1) * (sigma_x^2 + sigma_y^2 + C2)
     
     numerator / denominator
 end
 
 """
-    evaluate(reference, estimate; metrics=[:snr, :mse, :psnr, :ssim]) -> Dict{Symbol, Float64}
+    compute_relative_error(reference::SeismicDataset, estimate::SeismicDataset) -> Float64
+
+Compute relative Frobenius norm error.
+"""
+function compute_relative_error(reference::SeismicDataset, estimate::SeismicDataset)
+    diff = estimate.traces .- reference.traces
+    norm(diff) / (norm(reference.traces) + EPSILON)
+end
+
+"""
+    evaluate(reference::SeismicDataset, estimate::SeismicDataset; 
+             metrics=[:snr, :mse, :psnr, :ssim]) -> Dict{Symbol, Float64}
 
 Compute all specified evaluation metrics.
 
-# Example
-```julia
-metrics = evaluate(ground_truth, reconstructed)
-println("SNR: ", metrics[:snr], " dB")
-```
+# Arguments
+- `reference`: Ground truth dataset
+- `estimate`: Reconstructed/estimated dataset
+- `metrics`: Vector of metric symbols to compute
+
+# Returns
+- `Dict{Symbol, Float64}`: Metric names mapped to values
 """
-function evaluate(reference::AbstractArray, estimate::AbstractArray;
-                  metrics::Vector{Symbol}=[:snr, :mse, :psnr, :ssim])
-    results = Dict{Symbol, Float64}()
+function evaluate(
+    reference::SeismicDataset,
+    estimate::SeismicDataset;
+    metrics::Vector{Symbol} = [:snr, :mse, :psnr, :ssim]
+)
+    result = Dict{Symbol, Float64}()
     
-    :snr in metrics && (results[:snr] = compute_snr(reference, estimate))
-    :mse in metrics && (results[:mse] = compute_mse(reference, estimate))
-    :psnr in metrics && (results[:psnr] = compute_psnr(reference, estimate))
-    :ssim in metrics && (results[:ssim] = compute_ssim(reference, estimate))
+    for metric in metrics
+        value = if metric == :snr
+            compute_snr(reference, estimate)
+        elseif metric == :mse
+            compute_mse(reference, estimate)
+        elseif metric == :psnr
+            compute_psnr(reference, estimate)
+        elseif metric == :ssim
+            compute_ssim(reference, estimate)
+        elseif metric == :relative_error
+            compute_relative_error(reference, estimate)
+        else
+            error("Unknown metric: $metric")
+        end
+        result[metric] = value
+    end
     
-    results
+    result
 end

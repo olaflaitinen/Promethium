@@ -1,125 +1,197 @@
 """
-Recovery algorithms for Promethium.jl
+Recovery algorithms for seismic data reconstruction.
 
-Implements matrix completion (ISTA), compressive sensing (FISTA),
-following the Promethium specification pseudocode.
+Implements matrix completion (ISTA) and compressive sensing (FISTA).
 """
 
-"""
-    soft_threshold(x, τ)
-
-Soft thresholding operator: sign(x) * max(|x| - τ, 0)
-"""
-soft_threshold(x::Real, τ::Real) = sign(x) * max(abs(x) - τ, 0)
-soft_threshold(x::AbstractArray, τ::Real) = soft_threshold.(x, τ)
+# ============== Soft Thresholding ==============
 
 """
-    matrix_completion_ista(M, mask; λ=0.1, max_iter=100, tol=1e-5) -> Matrix
+    soft_threshold(x, tau)
 
-Matrix completion via ISTA with nuclear norm regularization.
+Soft thresholding operator for L1 proximal.
+"""
+soft_threshold(x::Real, tau::Real) = sign(x) * max(abs(x) - tau, 0.0)
+soft_threshold(x::AbstractArray, tau::Real) = soft_threshold.(x, tau)
 
-Solves: min_X (1/2)||P_Ω(X - M)||_F^2 + λ||X||_*
+
+# ============== Matrix Completion via ISTA ==============
+
+"""
+    matrix_completion_ista(observed, mask; kwargs...) -> Matrix
+
+Matrix completion via Iterative Shrinkage-Thresholding Algorithm.
+
+Solves: min_X (1/2)||P_Omega(X - M)||_F^2 + lambda ||X||_*
 
 # Arguments
-- `M`: Observed matrix (can have NaN for missing)
-- `mask`: Boolean matrix (true = observed)
-- `λ`: Regularization parameter
-- `max_iter`: Maximum iterations
-- `tol`: Convergence tolerance
+- `observed::AbstractMatrix`: Observed matrix (missing entries can be any value)
+- `mask::AbstractMatrix{Bool}`: Observation mask (true = observed)
+
+# Keyword Arguments
+- `lambda::Float64=0.1`: Nuclear norm regularization
+- `max_iter::Int=100`: Maximum iterations
+- `tolerance::Float64=1e-5`: Convergence tolerance
+- `verbose::Bool=false`: Print progress
 
 # Returns
-Completed matrix X
+- `Matrix{Float64}`: Completed matrix
 """
 function matrix_completion_ista(
-    M::AbstractMatrix,
+    observed::AbstractMatrix{T},
     mask::AbstractMatrix{Bool};
-    λ::Float64 = 0.1,
+    lambda::Float64 = 0.1,
     max_iter::Int = 100,
-    tol::Float64 = 1e-5
-)
-    X = copy(M)
-    X[.!mask] .= 0.0
-    L = 1.0
+    tolerance::Float64 = 1e-5,
+    verbose::Bool = false
+) where {T<:Real}
     
-    for k in 1:max_iter
-        # Gradient of data fidelity term
-        grad = mask .* (X .- M)
-        grad[isnan.(grad)] .= 0.0
+    m, n = size(observed)
+    @assert size(mask) == (m, n) "Mask dimensions must match observed"
+    
+    # Initialize with observed values
+    X = zeros(Float64, m, n)
+    for i in 1:m, j in 1:n
+        if mask[i, j]
+            X[i, j] = observed[i, j]
+        end
+    end
+    
+    L = 1.0  # Lipschitz constant
+    
+    for iter in 1:max_iter
+        # Gradient step
+        grad = zeros(Float64, m, n)
+        for i in 1:m, j in 1:n
+            if mask[i, j]
+                grad[i, j] = X[i, j] - observed[i, j]
+            end
+        end
         
-        Z = X .- (1/L) .* grad
+        Z = X - (1.0 / L) * grad
         
-        # SVD soft-thresholding (proximal of nuclear norm)
-        F = svd(Z)
-        S_thresh = max.(F.S .- λ/L, 0.0)
-        X_new = F.U * Diagonal(S_thresh) * F.Vt
+        # Proximal step: singular value soft thresholding
+        U, S, V = svd(Z)
+        S_thresh = soft_threshold(S, lambda / L)
+        
+        X_new = U * Diagonal(S_thresh) * V'
         
         # Check convergence
-        rel_change = norm(X_new - X) / (norm(X) + 1e-10)
-        if rel_change < tol
-            @info "ISTA converged at iteration $k"
-            return X_new
+        rel_change = norm(X_new - X) / (norm(X) + EPSILON)
+        
+        if verbose && iter % 10 == 0
+            println("Iter $iter: relative change = $rel_change")
         end
+        
+        if rel_change < tolerance
+            verbose && println("Converged at iteration $iter")
+            break
+        end
+        
         X = X_new
     end
     
-    @warn "ISTA did not converge within $max_iter iterations"
-    return X
+    X
 end
 
+
+# ============== Compressive Sensing via FISTA ==============
+
 """
-    compressive_sensing_fista(y, A; λ=0.1, max_iter=100, tol=1e-5) -> Vector
+    compressive_sensing_fista(y, A; kwargs...) -> Vector
 
 Sparse recovery via FISTA (Fast ISTA) with L1 regularization.
 
-Solves: min_x (1/2)||Ax - y||_2^2 + λ||x||_1
+Solves: min_x (1/2)||Ax - y||_2^2 + lambda ||x||_1
+
+FISTA achieves O(1/k^2) convergence rate.
 
 # Arguments
-- `y`: Observation vector
-- `A`: Measurement matrix
-- `λ`: Regularization parameter
-- `max_iter`: Maximum iterations  
-- `tol`: Convergence tolerance
+- `y::AbstractVector`: Observation vector
+- `A::AbstractMatrix`: Measurement matrix
+
+# Keyword Arguments
+- `lambda::Float64=0.1`: L1 regularization
+- `max_iter::Int=100`: Maximum iterations
+- `tolerance::Float64=1e-5`: Convergence tolerance
+- `verbose::Bool=false`: Print progress
 
 # Returns
-Recovered sparse vector x
+- `Vector{Float64}`: Recovered sparse vector
 """
 function compressive_sensing_fista(
-    y::AbstractVector,
-    A::AbstractMatrix;
-    λ::Float64 = 0.1,
+    y::AbstractVector{T},
+    A::AbstractMatrix{S};
+    lambda::Float64 = 0.1,
     max_iter::Int = 100,
-    tol::Float64 = 1e-5
-)
-    n = size(A, 2)
-    x = zeros(n)
+    tolerance::Float64 = 1e-5,
+    verbose::Bool = false
+) where {T<:Real, S<:Real}
+    
+    m, n = size(A)
+    @assert length(y) == m "Observation length must match rows of A"
+    
+    x = zeros(Float64, n)
     z = copy(x)
     t = 1.0
     
-    # Lipschitz constant (spectral norm squared)
-    L = maximum(svd(A).S)^2
+    # Lipschitz constant estimate
+    AtA = A' * A
+    L = maximum(abs.(diag(AtA))) * n
     
-    for k in 1:max_iter
+    for iter in 1:max_iter
         # Gradient step
         grad = A' * (A * z - y)
-        u = z - (1/L) * grad
+        u = z - (1.0 / L) * grad
         
-        # Proximal step (soft thresholding)
-        x_new = soft_threshold(u, λ/L)
+        # Proximal step (soft thresholding for L1)
+        x_new = soft_threshold(u, lambda / L)
         
-        # FISTA momentum update
-        t_new = (1 + sqrt(1 + 4*t^2)) / 2
-        z = x_new + ((t - 1) / t_new) * (x_new - x)
+        # FISTA momentum
+        t_new = (1.0 + sqrt(1.0 + 4.0 * t^2)) / 2.0
+        z = x_new + ((t - 1.0) / t_new) * (x_new - x)
         
         # Check convergence
-        if norm(x_new - x) / (norm(x) + 1e-10) < tol
-            @info "FISTA converged at iteration $k"
-            return x_new
+        rel_change = norm(x_new - x) / (norm(x) + EPSILON)
+        
+        if verbose && iter % 10 == 0
+            println("Iter $iter: relative change = $rel_change")
+        end
+        
+        if rel_change < tolerance
+            verbose && println("Converged at iteration $iter")
+            break
         end
         
         x = x_new
         t = t_new
     end
     
-    @warn "FISTA did not converge within $max_iter iterations"
-    return x
+    x
+end
+
+"""
+    compressive_sensing_ista(y, A; kwargs...) -> Vector
+
+Standard ISTA (simpler but slower O(1/k) convergence).
+"""
+function compressive_sensing_ista(
+    y::AbstractVector,
+    A::AbstractMatrix;
+    lambda::Float64 = 0.1,
+    max_iter::Int = 100
+)
+    m, n = size(A)
+    x = zeros(Float64, n)
+    
+    AtA = A' * A
+    L = maximum(abs.(diag(AtA))) * n
+    
+    for iter in 1:max_iter
+        grad = A' * (A * x - y)
+        u = x - (1.0 / L) * grad
+        x = soft_threshold(u, lambda / L)
+    end
+    
+    x
 end

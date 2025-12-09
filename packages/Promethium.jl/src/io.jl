@@ -1,125 +1,226 @@
 """
-I/O functions for Promethium.jl
-
-Provides SEG-Y reading/writing stubs and reference data loading.
+I/O functions for seismic data formats.
 """
 
-"""
-    load_segy(path::String; dt=nothing) -> SeismicDataset
-
-Load seismic data from SEG-Y format.
-
-Note: This is a stub implementation. For full SEG-Y support,
-use the SEGY.jl package or implement custom reader.
-"""
-function load_segy(path::String; dt::Union{Nothing,Float64}=nothing)
-    if !isfile(path)
-        error("File not found: $path")
-    end
-    
-    @warn "SEG-Y reading is a stub. Install SEGY.jl for full support."
-    
-    # Stub: return synthetic data
-    n_traces = 100
-    n_samples = 500
-    dt_val = isnothing(dt) ? 0.004 : dt
-    
-    traces = randn(n_traces, n_samples)
-    SeismicDataset(traces, dt_val; 
-                   metadata=Dict{String,Any}("source" => path, "format" => "segy"))
-end
+# ============== Synthetic Data Generation ==============
 
 """
-    write_segy(dataset::SeismicDataset, path::String)
-
-Write seismic data to SEG-Y format.
-"""
-function write_segy(dataset::SeismicDataset, path::String)
-    @warn "SEG-Y writing is a stub. Install SEGY.jl for full support."
-    
-    # Stub: save as JLD2 instead
-    @info "Data not saved (stub implementation)"
-    nothing
-end
-
-"""
-    load_hdf5(path::String; dataset_name="traces") -> SeismicDataset
-
-Load reference test data from HDF5 format.
-"""
-function load_hdf5(path::String; dataset_name::String="traces")
-    # Note: Requires HDF5.jl package
-    try
-        using HDF5: h5open, read
-    catch
-        error("HDF5.jl required. Install with: ] add HDF5")
-    end
-    
-    h5open(path, "r") do file
-        traces = read(file, dataset_name)
-        dt = haskey(file, "dt") ? read(file, "dt") : 0.004
-        SeismicDataset(traces, Float64(dt);
-                       metadata=Dict{String,Any}("source" => path, "format" => "hdf5"))
-    end
-end
-
-"""
-    synthetic_data(; n_traces=100, n_samples=500, dt=0.004, noise_level=0.1, seed=nothing) -> SeismicDataset
+    synthetic_data(; kwargs...) -> SeismicDataset
 
 Generate synthetic seismic data for testing.
 
-# Arguments
-- `n_traces`: Number of traces
-- `n_samples`: Samples per trace  
-- `dt`: Sampling interval in seconds
-- `noise_level`: Relative noise level (0-1)
-- `seed`: Random seed for reproducibility
+# Keyword Arguments
+- `ntraces::Int=100`: Number of traces
+- `nsamples::Int=500`: Samples per trace
+- `dt::Float64=0.004`: Sampling interval (seconds)
+- `noise_level::Float64=0.1`: Noise level relative to signal
+- `seed::Union{Int,Nothing}=nothing`: Random seed for reproducibility
 
 # Returns
-SeismicDataset with synthetic traces
+- `SeismicDataset`: Synthetic dataset with Ricker wavelets and noise
 """
-function synthetic_data(; 
-    n_traces::Int=100, 
-    n_samples::Int=500, 
-    dt::Float64=0.004, 
-    noise_level::Float64=0.1,
-    seed::Union{Nothing,Int}=nothing
+function synthetic_data(;
+    ntraces::Int = 100,
+    nsamples::Int = 500,
+    dt::Float64 = 0.004,
+    noise_level::Float64 = 0.1,
+    seed::Union{Int, Nothing} = nothing
 )
     if !isnothing(seed)
-        import Random
         Random.seed!(seed)
     end
     
-    t = collect(0:n_samples-1) .* dt
-    traces = zeros(n_traces, n_samples)
+    traces = zeros(Float64, ntraces, nsamples)
+    t = range(0.0, step=dt, length=nsamples)
     
-    for i in 1:n_traces
-        # Random number of events
-        n_events = rand(3:8)
-        event_times = sort(rand(n_events) .* (maximum(t) - 0.2) .+ 0.1)
-        event_amps = (rand(n_events) .* 1.0 .+ 0.5) .* rand([-1, 1], n_events)
+    for i in 1:ntraces
+        n_events = rand(3:7)
         
-        for (te, ae) in zip(event_times, event_amps)
-            # Ricker wavelet
-            f0 = 30.0  # Dominant frequency
-            tau = t .- te
-            wavelet = (1.0 .- 2.0 .* (pi .* f0 .* tau).^2) .* exp.(-(pi .* f0 .* tau).^2)
-            traces[i, :] .+= ae .* wavelet
+        for _ in 1:n_events
+            event_time = rand() * (t[end] - 0.2) + 0.1
+            event_amp = (rand() + 0.5) * (rand(Bool) ? 1 : -1)
+            f0 = 30.0  # Dominant frequency (Hz)
+            
+            for j in 1:nsamples
+                tau = t[j] - event_time
+                # Ricker wavelet
+                wavelet = (1.0 - 2.0 * (pi * f0 * tau)^2) * exp(-(pi * f0 * tau)^2)
+                traces[i, j] += event_amp * wavelet
+            end
         end
     end
     
     # Add noise
     if noise_level > 0
-        signal_rms = sqrt(mean(traces.^2))
-        noise = randn(n_traces, n_samples)
-        traces .+= noise_level .* signal_rms .* noise
+        signal_rms = sqrt(mean(traces .^ 2))
+        traces .+= noise_level * signal_rms .* randn(ntraces, nsamples)
     end
     
-    SeismicDataset(traces, dt;
-                   metadata=Dict{String,Any}(
-                       "synthetic" => true,
-                       "n_traces" => n_traces,
-                       "n_samples" => n_samples,
-                       "noise_level" => noise_level
-                   ))
+    SeismicDataset(
+        traces, dt;
+        metadata = Dict{String, Any}(
+            "synthetic" => true,
+            "ntraces" => ntraces,
+            "nsamples" => nsamples,
+            "noise_level" => noise_level
+        )
+    )
+end
+
+# ============== SEG-Y I/O ==============
+
+"""
+    load_segy(path::AbstractString) -> SeismicDataset
+
+Load seismic data from SEG-Y file.
+
+Note: This is a simplified implementation supporting common SEG-Y variants.
+"""
+function load_segy(path::AbstractString)
+    @assert isfile(path) "File not found: $path"
+    
+    open(path, "r") do io
+        # Skip textual header (3200 bytes)
+        skip(io, 3200)
+        
+        # Read binary header (400 bytes)
+        binary_header = read(io, 400)
+        
+        # Sample interval (bytes 17-18, big-endian)
+        dt_micros = ntoh(reinterpret(UInt16, binary_header[17:18])[1])
+        dt = dt_micros / 1_000_000
+        if dt <= 0
+            dt = 0.004  # Default to 4ms
+        end
+        
+        # Samples per trace (bytes 21-22)
+        nsamples = ntoh(reinterpret(UInt16, binary_header[21:22])[1])
+        
+        # Format code (bytes 25-26)
+        format_code = ntoh(reinterpret(Int16, binary_header[25:26])[1])
+        
+        # Determine bytes per sample
+        bytes_per_sample = format_code in [1, 5] ? 4 : (format_code == 3 ? 2 : 4)
+        
+        # Calculate number of traces
+        data_start = 3600
+        trace_header_size = 240
+        trace_size = trace_header_size + nsamples * bytes_per_sample
+        file_size = filesize(path)
+        ntraces = div(file_size - data_start, trace_size)
+        
+        # Read traces
+        traces = zeros(Float64, ntraces, nsamples)
+        seek(io, data_start)
+        
+        for i in 1:ntraces
+            # Skip trace header
+            skip(io, trace_header_size)
+            
+            # Read samples
+            if format_code == 5  # IEEE float
+                for j in 1:nsamples
+                    traces[i, j] = ntoh(read(io, Float32))
+                end
+            elseif format_code == 1  # IBM float
+                for j in 1:nsamples
+                    traces[i, j] = ibm_to_ieee(ntoh(read(io, UInt32)))
+                end
+            else
+                for j in 1:nsamples
+                    traces[i, j] = ntoh(read(io, Float32))
+                end
+            end
+        end
+        
+        SeismicDataset(
+            traces, dt;
+            metadata = Dict{String, Any}(
+                "source" => path,
+                "format" => "segy",
+                "ntraces" => ntraces,
+                "nsamples" => nsamples
+            )
+        )
+    end
+end
+
+"""Convert IBM floating point to IEEE."""
+function ibm_to_ieee(ibm::UInt32)::Float64
+    sign = (ibm & 0x80000000) != 0 ? -1.0 : 1.0
+    exponent = Int((ibm >> 24) & 0x7F) - 64
+    mantissa = Float64(ibm & 0x00FFFFFF) / 16777216.0
+    sign * mantissa * 16.0^exponent
+end
+
+"""
+    write_segy(path::AbstractString, ds::SeismicDataset)
+
+Write seismic data to SEG-Y file.
+"""
+function write_segy(path::AbstractString, ds::SeismicDataset)
+    open(path, "w") do io
+        # Write textual header (3200 bytes of spaces)
+        write(io, repeat(UInt8(' '), 3200))
+        
+        # Write binary header (400 bytes)
+        binary_header = zeros(UInt8, 400)
+        
+        # Sample interval in microseconds
+        dt_micros = round(UInt16, ds.dt * 1_000_000)
+        binary_header[17:18] .= reinterpret(UInt8, [hton(dt_micros)])
+        
+        # Samples per trace
+        binary_header[21:22] .= reinterpret(UInt8, [hton(UInt16(n_samples(ds)))])
+        
+        # Format code (5 = IEEE float)
+        binary_header[25:26] .= reinterpret(UInt8, [hton(Int16(5))])
+        
+        write(io, binary_header)
+        
+        # Write traces
+        for i in 1:n_traces(ds)
+            # Write trace header (240 bytes)
+            write(io, zeros(UInt8, 240))
+            
+            # Write samples as IEEE floats
+            for j in 1:n_samples(ds)
+                write(io, hton(Float32(ds.traces[i, j])))
+            end
+        end
+    end
+end
+
+# ============== HDF5 I/O ==============
+
+"""
+    load_hdf5(path::AbstractString; group="seismic") -> SeismicDataset
+
+Load seismic data from HDF5 file.
+"""
+function load_hdf5(path::AbstractString; group::String="seismic")
+    # HDF5 support requires HDF5.jl
+    if !isdefined(Main, :HDF5)
+        @warn "HDF5.jl not loaded. Using synthetic data."
+        return synthetic_data()
+    end
+    
+    # Placeholder - actual implementation requires HDF5.jl
+    error("HDF5 loading not implemented in this stub")
+end
+
+"""
+    save_hdf5(path::AbstractString, ds::SeismicDataset; group="seismic")
+
+Save seismic data to HDF5 file.
+"""
+function save_hdf5(path::AbstractString, ds::SeismicDataset; group::String="seismic")
+    # HDF5 support requires HDF5.jl
+    if !isdefined(Main, :HDF5)
+        @warn "HDF5.jl not loaded. Skipping save."
+        return
+    end
+    
+    # Placeholder - actual implementation requires HDF5.jl
+    error("HDF5 saving not implemented in this stub")
 end

@@ -1,19 +1,26 @@
 name = "Promethium"
 uuid = "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
-authors = ["Olaf Yunus Laitinen Imanov <contact@promethium.dev>"]
+authors = ["Promethium Contributors"]
 version = "1.0.4"
 
 [deps]
 FFTW = "7a1cc6ca-52ef-59f5-83cd-3a7055c09341"
+HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+JSON3 = "0f8b85d8-7281-11e9-16c2-39a750bddbf1"
+Logging = "56ddb016-857b-54e1-b83d-db4d58db5568"
 
 [compat]
 julia = "1.9"
-FFTW = "1"
+FFTW = "1.8"
+HDF5 = "0.17"
+JSON3 = "1.14"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 
 [targets]
-test = ["Test"]
+test = ["Test", "BenchmarkTools"]

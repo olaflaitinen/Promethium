@@ -1,68 +1,150 @@
 """
-Signal processing functions for Promethium.jl
+Signal processing functions for seismic data.
+
+Provides Wiener filter, bandpass filter, and DC offset removal.
 """
 
-"""
-    wiener_filter(y; noise_var=nothing) -> Vector
+# ============== Wiener Filter ==============
 
-Apply frequency-domain Wiener filter for denoising.
+"""
+    wiener_filter(signal::AbstractVector; noise_var=nothing) -> Vector
+
+Apply frequency-domain Wiener filter to signal.
 
 # Arguments
-- `y`: Noisy signal vector
-- `noise_var`: Estimated noise variance (auto-estimated if nothing)
+- `signal`: Input 1D signal
+- `noise_var`: Noise variance estimate (auto-estimated if nothing)
 
 # Returns
-Denoised signal
+- Filtered signal
 """
-function wiener_filter(y::AbstractVector; noise_var::Union{Nothing,Float64}=nothing)
-    N = length(y)
+function wiener_filter(signal::AbstractVector{T}; noise_var=nothing) where {T<:Real}
+    n = length(signal)
     
     # FFT
-    Y = fft(y)
-    P_y = abs.(Y).^2 ./ N
+    Y = fft(signal)
+    Py = abs2.(Y) ./ n
     
-    # Estimate noise PSD from high-frequency components
-    if isnothing(noise_var)
-        noise_var = median(P_y[div(N,2):end])
+    # Estimate noise PSD
+    Pn = if isnothing(noise_var)
+        tail_start = div(n, 2)
+        fill(mean(Py[tail_start:end]), n)
+    else
+        fill(noise_var, n)
     end
-    P_n = fill(noise_var, N)
     
-    # Wiener filter transfer function
-    P_s = max.(P_y .- P_n, 0.0)
-    H = P_s ./ (P_s .+ P_n .+ 1e-10)
+    # Wiener filter
+    Ps = max.(Py .- Pn, 0.0)
+    H = (Ps .+ EPSILON) ./ (Ps .+ Pn .+ EPSILON)
     
-    # Apply filter and inverse transform
-    S_hat = H .* Y
-    s_hat = real.(ifft(S_hat))
+    # Apply filter
+    Y_filtered = Y .* H
     
-    return s_hat
+    # Inverse FFT
+    real.(ifft(Y_filtered))
 end
 
 """
-    bandpass_filter(x, dt, low_freq, high_freq) -> Vector
+    wiener_filter(ds::SeismicDataset; noise_var=nothing) -> SeismicDataset
 
-Apply bandpass filter in frequency domain.
+Apply Wiener filter to all traces in dataset.
 """
-function bandpass_filter(x::AbstractVector, dt::Float64, low_freq::Float64, high_freq::Float64)
-    N = length(x)
-    X = fft(x)
+function wiener_filter(ds::SeismicDataset; noise_var=nothing)
+    result = similar(ds.traces)
     
-    # Frequency axis
-    freqs = fftfreq(N, 1/dt)
+    for i in 1:n_traces(ds)
+        result[i, :] = wiener_filter(ds.traces[i, :]; noise_var=noise_var)
+    end
     
-    # Create bandpass mask
-    mask = (abs.(freqs) .>= low_freq) .& (abs.(freqs) .<= high_freq)
+    SeismicDataset(result, ds.dt; coords=ds.coords, metadata=ds.metadata)
+end
+
+
+# ============== Bandpass Filter ==============
+
+"""
+    bandpass_filter(signal::AbstractVector, dt, low_freq, high_freq; taper_width=5.0)
+
+Apply frequency-domain bandpass filter.
+
+# Arguments
+- `signal`: Input signal
+- `dt`: Sampling interval
+- `low_freq`: Low cutoff frequency (Hz)
+- `high_freq`: High cutoff frequency (Hz)
+- `taper_width`: Cosine taper width in Hz
+
+# Returns
+- Filtered signal
+"""
+function bandpass_filter(
+    signal::AbstractVector{T},
+    dt::Real,
+    low_freq::Real,
+    high_freq::Real;
+    taper_width::Real = 5.0
+) where {T<:Real}
     
-    # Apply and inverse
+    n = length(signal)
+    X = fft(signal)
+    df = 1.0 / (n * dt)
+    
+    # Create bandpass mask with cosine taper
+    mask = zeros(Float64, n)
+    
+    for i in 1:n
+        freq = i <= div(n, 2) + 1 ? (i - 1) * df : (i - 1 - n) * df
+        abs_freq = abs(freq)
+        
+        if low_freq <= abs_freq <= high_freq
+            mask[i] = 1.0
+        elseif low_freq - taper_width < abs_freq < low_freq
+            mask[i] = 0.5 * (1 + cos(pi * (low_freq - abs_freq) / taper_width))
+        elseif high_freq < abs_freq < high_freq + taper_width
+            mask[i] = 0.5 * (1 + cos(pi * (abs_freq - high_freq) / taper_width))
+        end
+    end
+    
     X_filtered = X .* mask
-    return real.(ifft(X_filtered))
+    real.(ifft(X_filtered))
 end
 
-# Helper: generate frequency axis for FFT
-function fftfreq(n::Int, d::Float64=1.0)
-    val = 1.0 / (n * d)
-    N = div(n - 1, 2) + 1
-    p1 = collect(0:N-1)
-    p2 = collect(-div(n, 2):-1)
-    return vcat(p1, p2) .* val
+"""
+    bandpass_filter(ds::SeismicDataset, low_freq, high_freq) -> SeismicDataset
+
+Apply bandpass filter to all traces.
+"""
+function bandpass_filter(ds::SeismicDataset, low_freq::Real, high_freq::Real)
+    result = similar(ds.traces)
+    
+    for i in 1:n_traces(ds)
+        result[i, :] = bandpass_filter(ds.traces[i, :], ds.dt, low_freq, high_freq)
+    end
+    
+    SeismicDataset(result, ds.dt; coords=ds.coords, metadata=ds.metadata)
+end
+
+
+# ============== Remove DC Offset ==============
+
+"""
+    remove_dc(signal::AbstractVector) -> Vector
+
+Remove DC offset (mean) from signal.
+"""
+remove_dc(signal::AbstractVector) = signal .- mean(signal)
+
+"""
+    remove_dc(ds::SeismicDataset) -> SeismicDataset
+
+Remove DC offset from all traces.
+"""
+function remove_dc(ds::SeismicDataset)
+    result = similar(ds.traces)
+    
+    for i in 1:n_traces(ds)
+        result[i, :] = remove_dc(ds.traces[i, :])
+    end
+    
+    SeismicDataset(result, ds.dt; coords=ds.coords, metadata=ds.metadata)
 end

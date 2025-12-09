@@ -18,8 +18,11 @@ const VERSION = v"1.0.4"
 export SeismicDataset, VelocityModel, RecoveryPipeline
 export n_traces, n_samples, normalize
 
-# I/O (stubs for future implementation)
-export load_segy, write_segy
+# I/O
+export load_segy, write_segy, synthetic_data
+
+# Pipeline
+export from_preset, run_pipeline, run
 
 # Algorithms
 export wiener_filter, matrix_completion_ista, compressive_sensing_fista
@@ -29,8 +32,11 @@ export compute_snr, compute_mse, compute_psnr, compute_ssim, evaluate
 
 # Include submodules
 include("types.jl")
+include("io.jl")
 include("metrics.jl")
 include("recovery.jl")
 include("signal.jl")
+include("pipeline.jl")
 
 end # module
+

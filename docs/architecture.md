@@ -18,181 +18,175 @@ Promethium is implemented as **four independent native libraries** that share a 
 
 ## System Architecture
 
-```
-+------------------------------------------------------------------+
-|                    Promethium Specification                       |
-|  (Mathematical Models, Algorithms, Data Structures, Metrics)      |
-+------------------------------------------------------------------+
-                              |
-        +---------------------+---------------------+
-        |                     |                     |
-        v                     v                     v
-+---------------+    +---------------+    +---------------+
-|    Python     |    |      R        |    |    Julia      |
-| promethium-   |    | promethiumR   |    | Promethium.jl |
-|   seismic     |    |               |    |               |
-+---------------+    +---------------+    +---------------+
-| NumPy, SciPy  |    | Matrix, Rcpp  |    | FFTW, Linear  |
-| PyTorch, JAX  |    | torch, keras  |    |  Algebra,Flux |
-+---------------+    +---------------+    +---------------+
-        |                     |                     |
-        v                     v                     v
-+---------------+    +---------------+    +---------------+
-|  PyPI / pip   |    | CRAN / GitHub |    | Pkg Registry  |
-+---------------+    +---------------+    +---------------+
-
-                              +
-                              |
-                              v
-                    +---------------+
-                    |    Scala      |
-                    | promethium-   |
-                    |    scala      |
-                    +---------------+
-                    | Breeze, ND4J  |
-                    | DL4J          |
-                    +---------------+
-                              |
-                              v
-                    +---------------+
-                    | Maven Central |
-                    +---------------+
+```mermaid
+flowchart TB
+    subgraph SPEC["Promethium Specification"]
+        direction LR
+        S1["Mathematical Models"]
+        S2["Algorithms"]
+        S3["Data Structures"]
+        S4["Metrics"]
+    end
+    
+    SPEC --> PY
+    SPEC --> R
+    SPEC --> JL
+    SPEC --> SC
+    
+    subgraph PY["Python"]
+        PY1["promethium-seismic"]
+        PY2["NumPy, SciPy, PyTorch"]
+    end
+    
+    subgraph R["R"]
+        R1["promethiumR"]
+        R2["Matrix, Rcpp, torch"]
+    end
+    
+    subgraph JL["Julia"]
+        JL1["Promethium.jl"]
+        JL2["FFTW, LinearAlgebra, Flux"]
+    end
+    
+    subgraph SC["Scala"]
+        SC1["promethium-scala"]
+        SC2["Breeze, ND4J, DL4J"]
+    end
+    
+    PY --> PYPI["PyPI"]
+    R --> CRAN["CRAN / GitHub"]
+    JL --> JLREG["Julia Registry"]
+    SC --> MVN["Maven Central"]
 ```
 
 ## Package Structure
 
-### Python (`src/promethium/`)
+### Python
 
-```
-promethium/
-  __init__.py           # Public API exports
-  core/                 # Configuration, logging, exceptions
-  io/                   # SEG-Y, MiniSEED, HDF5, cloud storage
-  signal/               # Filters, transforms, deconvolution
-  ml/                   # U-Net, autoencoder, GAN, PINN
-  pipelines/            # SeismicRecoveryPipeline
-  evaluation/           # Metrics (SNR, MSE, PSNR, SSIM)
-  cli/                  # Command-line interface
-  api/                  # FastAPI backend (optional)
-```
+Location: `src/promethium/`
 
-### R (`packages/promethiumR/`)
+| Directory | Purpose |
+|-----------|---------|
+| `core/` | Configuration, logging, exceptions |
+| `io/` | SEG-Y, MiniSEED, HDF5, cloud storage |
+| `signal/` | Filters, transforms, deconvolution |
+| `ml/` | U-Net, autoencoder, GAN, PINN |
+| `pipelines/` | SeismicRecoveryPipeline |
+| `evaluation/` | Metrics (SNR, MSE, PSNR, SSIM) |
+| `cli/` | Command-line interface |
+| `api/` | FastAPI backend (optional) |
 
-```
-promethiumR/
-  DESCRIPTION           # Package metadata
-  NAMESPACE             # Exports
-  R/
-    dataset.R           # SeismicDataset S3 class
-    metrics.R           # Evaluation functions
-    recovery.R          # ISTA, FISTA, Wiener
-    pipeline.R          # Pipeline orchestration
-    io.R                # Data I/O
-  tests/testthat/       # Unit tests
-```
+### R
 
-### Julia (`packages/Promethium.jl/`)
+Location: `packages/promethiumR/`
 
-```
-Promethium.jl/
-  Project.toml          # Package manifest
-  src/
-    Promethium.jl       # Main module
-    types.jl            # SeismicDataset, VelocityModel
-    metrics.jl          # Evaluation metrics
-    recovery.jl         # Matrix completion, FISTA
-    signal.jl           # Wiener filter, transforms
-    pipeline.jl         # RecoveryPipeline
-  test/runtests.jl      # Test suite
-```
+| File | Purpose |
+|------|---------|
+| `DESCRIPTION` | Package metadata |
+| `NAMESPACE` | Exports |
+| `R/dataset.R` | SeismicDataset S3 class |
+| `R/metrics.R` | Evaluation functions |
+| `R/recovery.R` | ISTA, FISTA, Wiener |
+| `R/pipeline.R` | Pipeline orchestration |
+| `R/io.R` | Data I/O |
+| `tests/testthat/` | Unit tests |
 
-### Scala (`packages/promethium-scala/`)
+### Julia
 
-```
-promethium-scala/
-  build.sbt             # SBT build definition
-  src/main/scala/io/promethium/
-    core/               # SeismicDataset, VelocityModel, Pipeline
-    evaluation/         # Metrics
-    recovery/           # MatrixCompletion, CompressiveSensing
-    signal/             # Filters
-  src/test/scala/       # ScalaTest suite
-```
+Location: `packages/Promethium.jl/`
+
+| File | Purpose |
+|------|---------|
+| `Project.toml` | Package manifest |
+| `src/Promethium.jl` | Main module |
+| `src/types.jl` | SeismicDataset, VelocityModel |
+| `src/metrics.jl` | Evaluation metrics |
+| `src/recovery.jl` | Matrix completion, FISTA |
+| `src/signal.jl` | Wiener filter, transforms |
+| `src/pipeline.jl` | RecoveryPipeline |
+| `test/runtests.jl` | Test suite |
+
+### Scala
+
+Location: `packages/promethium-scala/`
+
+| Directory | Purpose |
+|-----------|---------|
+| `core/` | SeismicDataset, VelocityModel, Pipeline |
+| `evaluation/` | Metrics |
+| `recovery/` | MatrixCompletion, CompressiveSensing |
+| `signal/` | Filters |
+| `io/` | PromethiumIO |
 
 ## Data Flow
 
-```
-Input Data (SEG-Y, HDF5, NumPy)
-        |
-        v
-+-------------------+
-| SeismicDataset    |
-| - traces          |
-| - dt              |
-| - coordinates     |
-| - metadata        |
-+-------------------+
-        |
-        v
-+-------------------+
-| RecoveryPipeline  |
-| - preprocessing   |
-| - model config    |
-| - postprocessing  |
-+-------------------+
-        |
-        v
-+-------------------+
-| Recovery Model    |
-| - Matrix Compl.   |
-| - Comp. Sensing   |
-| - U-Net / PINN    |
-+-------------------+
-        |
-        v
-+-------------------+
-| Evaluation        |
-| - SNR, MSE, PSNR  |
-| - SSIM            |
-+-------------------+
-        |
-        v
-Output Data + Metrics
+```mermaid
+flowchart TD
+    INPUT["Input Data<br/>SEG-Y, HDF5, NumPy"]
+    
+    INPUT --> DS
+    
+    DS["SeismicDataset<br/>traces, dt, coordinates, metadata"]
+    
+    DS --> PIPE
+    
+    PIPE["RecoveryPipeline<br/>preprocessing, model config, postprocessing"]
+    
+    PIPE --> MODEL
+    
+    MODEL["Recovery Model<br/>Matrix Completion / Compressive Sensing / U-Net / PINN"]
+    
+    MODEL --> EVAL
+    
+    EVAL["Evaluation<br/>SNR, MSE, PSNR, SSIM"]
+    
+    EVAL --> OUTPUT["Output Data + Metrics"]
 ```
 
 ## Algorithm Categories
 
 ### Classical Signal Processing
-- Wiener filtering
-- Adaptive filters (LMS, Kalman)
-- Deconvolution
-- Time-frequency transforms (STFT, wavelet)
+
+| Algorithm | Purpose |
+|-----------|---------|
+| Wiener filtering | Frequency-domain denoising |
+| Adaptive filters | LMS, Kalman variants |
+| Deconvolution | Wavelet recovery |
+| Time-frequency | STFT, wavelet transforms |
 
 ### Optimization-Based Recovery
-- Matrix completion via nuclear norm minimization (ISTA)
-- Compressive sensing via L1 minimization (FISTA)
-- Sparse representation
+
+| Algorithm | Method |
+|-----------|--------|
+| Matrix completion | Nuclear norm minimization (ISTA) |
+| Compressive sensing | L1 minimization (FISTA) |
+| Sparse representation | Matching pursuit, basis pursuit |
 
 ### Deep Learning
-- U-Net for interpolation and denoising
-- Convolutional autoencoders
-- GANs for high-fidelity reconstruction
-- Physics-informed neural networks (PINN)
+
+| Model | Application |
+|-------|-------------|
+| U-Net | Interpolation and denoising |
+| Autoencoder | Unsupervised denoising |
+| GAN | High-fidelity reconstruction |
+| PINN | Physics-constrained recovery |
 
 ## Cross-Language Validation
 
-All implementations are validated against shared test vectors stored in `testdata/` and `tests/cross_language/`. Numerical tolerances:
+All implementations are validated against shared test vectors stored in `testdata/` and `tests/cross_language/`.
 
-| Type | Tolerance |
-|------|-----------|
-| Metric values | 1e-6 absolute, 1e-4 relative |
-| Signal arrays | 1e-8 absolute, 1e-6 relative |
+| Type | Absolute Tolerance | Relative Tolerance |
+|------|-------------------|-------------------|
+| Metric values | 1e-6 | 1e-4 |
+| Signal arrays | 1e-8 | 1e-6 |
 
 ## Versioning
 
 All language implementations share synchronized major.minor versions:
-- Current: **1.0.4**
-- Python: `promethium-seismic==1.0.4`
-- R: `promethiumR` version 1.0.4
-- Julia: `Promethium` v1.0.4
-- Scala: `io.promethium:promethium-scala:1.0.4`
+
+| Language | Package | Current Version |
+|----------|---------|-----------------|
+| Python | `promethium-seismic` | 1.0.4 |
+| R | `promethiumR` | 1.0.4 |
+| Julia | `Promethium.jl` | 1.0.4 |
+| Scala | `promethium-scala` | 1.0.4 |

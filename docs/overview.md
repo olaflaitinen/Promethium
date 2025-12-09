@@ -5,11 +5,32 @@ This document provides an expanded conceptual overview of the Promethium framewo
 ## Table of Contents
 
 - [Introduction](#introduction)
+- [Multi-Language Architecture](#multi-language-architecture)
 - [The Challenge of Seismic Data Quality](#the-challenge-of-seismic-data-quality)
 - [Promethium's Approach](#promethiums-approach)
 - [Target Applications](#target-applications)
 - [Design Philosophy](#design-philosophy)
 - [Related Documents](#related-documents)
+
+---
+
+## Introduction
+
+Promethium is an advanced seismic data recovery and reconstruction framework implemented natively in **Python**, **R**, **Julia**, and **Scala**. Version 1.0.4 represents a comprehensive, state-of-the-art solution for addressing data quality challenges inherent in seismic data acquisition and processing.
+
+The framework integrates classical signal processing techniques with cutting-edge artificial intelligence and machine learning methods to deliver superior data reconstruction capabilities.
+
+## Multi-Language Architecture
+
+```mermaid
+graph TB
+    SPEC["Shared Specification"] --> PY["Python"]
+    SPEC --> R["R"]
+    SPEC --> JL["Julia"]
+    SPEC --> SC["Scala"]
+```
+
+All four implementations share the same mathematical specification but are **completely independent** with no runtime inter-language dependencies. See [Architecture](architecture.md) for details.
 
 ---
 

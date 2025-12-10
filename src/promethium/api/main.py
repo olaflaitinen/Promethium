@@ -3,9 +3,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
 from promethium.core.config import get_settings
+from promethium.core.config import get_settings
 from promethium.core.logging import logger
 from promethium.core.database import engine, Base
-from promethium.api.routers import datasets, jobs, ml
+from promethium.api.routers import datasets, jobs, ml, auth, users, pipelines, experiments, results, system, websockets
 
 settings = get_settings()
 
@@ -39,34 +40,13 @@ app.add_middleware(
 )
 
 # Include Routers
+app.include_router(auth.router, prefix=settings.API_PREFIX)
+app.include_router(users.router, prefix=settings.API_PREFIX)
 app.include_router(datasets.router, prefix=settings.API_PREFIX)
 app.include_router(jobs.router, prefix=settings.API_PREFIX)
 app.include_router(ml.router, prefix=settings.API_PREFIX)
-
-@app.get("/health")
-async def health_check():
-    """
-    System health check endpoint.
-    Returns status of all system components.
-    """
-    status = "ok"
-    db_status = "connected"
-    
-    # Database connectivity check
-    try:
-        async with engine.begin() as conn:
-            await conn.execute("SELECT 1")
-    except Exception as e:
-        logger.error(f"Database health check failed: {e}")
-        db_status = "disconnected"
-        status = "degraded"
-    
-    return {
-        "status": status,
-        "version": settings.APP_VERSION,
-        "database": db_status,
-        "components": {
-            "api": "running",
-            "database": db_status
-        }
-    }
+app.include_router(pipelines.router, prefix=settings.API_PREFIX)
+app.include_router(experiments.router, prefix=settings.API_PREFIX)
+app.include_router(results.router, prefix=settings.API_PREFIX)
+app.include_router(system.router, prefix=settings.API_PREFIX)
+app.include_router(websockets.router)

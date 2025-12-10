@@ -1,0 +1,68 @@
+# Matrix Completion Pipeline Configuration
+# 
+# Recovers missing traces using nuclear norm minimization with ISTA.
+# Suitable for spatially regular acquisition gaps.
+
+pipeline:
+  name: "matrix_completion"
+  type: "classical"
+  description: "Nuclear norm minimization for missing trace recovery"
+
+input:
+  path: "data/synthetic_missing.npy"
+  format: "npy"
+  # Optional: specify subset
+  # traces: [0, 100]
+  # samples: [0, 500]
+
+preprocessing:
+  normalize: true
+  normalize_method: "trace_max"  # Options: trace_max, global_max, zscore
+  
+  # Optional bandpass filter
+  bandpass:
+    enabled: false
+    low_freq: 5.0
+    high_freq: 80.0
+    sample_rate: 250.0
+
+model:
+  algorithm: "ista"
+  # Regularization parameter (lambda)
+  lambda: 0.1
+  # Maximum iterations
+  max_iter: 200
+  # Convergence tolerance
+  tolerance: 1e-6
+  # Rank constraint (0 = auto)
+  rank: 0
+
+postprocessing:
+  # Apply smoothing after reconstruction
+  smooth:
+    enabled: false
+    window_size: 3
+  
+  # Scale output
+  rescale: true
+
+evaluation:
+  metrics:
+    - snr
+    - mse
+    - psnr
+    - ssim
+  
+  # Compare against clean reference if available
+  reference_path: "data/synthetic_clean.npy"
+
+output:
+  path: "results/matrix_completion"
+  save_reconstructed: true
+  save_metrics: true
+  save_intermediate: false
+  format: "npy"  # Options: npy, hdf5, segy
+
+logging:
+  experiment_id: "matrix_completion_benchmark"
+  verbose: true

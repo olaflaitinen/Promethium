@@ -43,6 +43,11 @@ if PYDANTIC_SETTINGS_AVAILABLE:
         DATA_STORAGE_PATH: Path = Path("./data")
         ARTIFACT_STORAGE_PATH: Path = Path("./artifacts")
 
+        # Security
+        SECRET_KEY: str = "dev_secret_key_change_me_in_prod"
+        ALGORITHM: str = "HS256"
+        ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8  # 8 days
+
         # ML Configuration
         DEFAULT_DEVICE: str = "auto"  # auto, cuda, or cpu
         PRECISION: str = "float32"

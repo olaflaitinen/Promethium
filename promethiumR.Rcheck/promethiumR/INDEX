@@ -1,0 +1,35 @@
+SeismicDataset          Core Data Structures for promethiumR
+VelocityModel           Create a Velocity Model
+bandpass_filter         Bandpass Filter
+compressive_sensing_fista
+                        Compressive Sensing via FISTA
+compressive_sensing_ista
+                        Standard ISTA (simpler but slower O(1/k)
+                        convergence)
+compute_mse             Compute Mean Squared Error
+compute_psnr            Compute Peak Signal-to-Noise Ratio
+compute_relative_error
+                        Compute Relative Error
+compute_snr             Compute Signal-to-Noise Ratio
+compute_ssim            Compute Structural Similarity Index
+constant_velocity       Create constant velocity model
+from_preset             Create Pipeline from Preset
+interpolate_at          Bilinear interpolation of velocity at position
+linear_velocity         Create linear velocity gradient model
+matrix_completion_ista
+                        Matrix Completion via ISTA
+n_samples               Get number of samples per trace
+n_traces                Get number of traces in dataset
+normalize               Normalize traces
+promethium_evaluate     Evaluate All Metrics
+promethium_load_hdf5    Load HDF5 File
+promethium_load_segy    Load SEG-Y File
+promethium_pipeline     Recovery Pipeline for Seismic Data
+promethium_run          Run Recovery Pipeline
+promethium_save_hdf5    Save HDF5 File
+promethium_synthetic    I/O Functions for Seismic Data Formats
+promethium_write_segy   Write SEG-Y File
+remove_dc               Remove DC Offset
+subset_traces           Subset traces by indices
+time_axis               Get time axis vector
+wiener_filter           Signal Processing Functions for Seismic Data

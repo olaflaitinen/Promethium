@@ -1,0 +1,101 @@
+# U-Net Denoising Pipeline Configuration
+#
+# Deep learning-based seismic denoising using U-Net architecture.
+# Requires trained model weights or trains from scratch.
+
+pipeline:
+  name: "unet_denoising"
+  type: "deep_learning"
+  description: "4-level U-Net for seismic denoising and interpolation"
+
+input:
+  path: "data/synthetic_noisy.npy"
+  format: "npy"
+  
+preprocessing:
+  normalize: true
+  normalize_method: "zscore"
+  
+  # Patch extraction for training/inference
+  patches:
+    enabled: true
+    size: [64, 64]
+    stride: [32, 32]
+    
+  # Data augmentation (training only)
+  augmentation:
+    enabled: true
+    horizontal_flip: true
+    vertical_flip: false
+    random_noise: 0.01
+
+model:
+  architecture: "unet"
+  version: "v1"
+  
+  # Model hyperparameters
+  encoder_channels: [32, 64, 128, 256]
+  decoder_channels: [128, 64, 32]
+  kernel_size: 3
+  activation: "relu"
+  batch_norm: true
+  dropout: 0.1
+  
+  # Training configuration
+  training:
+    enabled: false  # Set to true for training mode
+    epochs: 100
+    batch_size: 16
+    learning_rate: 0.001
+    optimizer: "adam"
+    scheduler: "cosine"
+    early_stopping:
+      patience: 10
+      min_delta: 0.0001
+    
+  # Inference configuration
+  inference:
+    weights_path: "models/unet_denoise_v1.pt"
+    device: "auto"  # Options: auto, cuda, cpu
+    batch_size: 32
+    overlap_blend: true
+
+postprocessing:
+  # Reassemble patches
+  patch_reassembly:
+    method: "average"  # Options: average, weighted
+    
+  rescale: true
+  
+  # Optional smoothing
+  smooth:
+    enabled: false
+    method: "gaussian"
+    sigma: 1.0
+
+evaluation:
+  metrics:
+    - snr
+    - mse
+    - psnr
+    - ssim
+    - frequency_correlation
+    
+  reference_path: "data/synthetic_clean.npy"
+  
+  # Spectrogram comparison
+  spectral_analysis:
+    enabled: true
+    fft_size: 256
+
+output:
+  path: "results/unet_denoising"
+  save_reconstructed: true
+  save_metrics: true
+  save_model_checkpoint: true
+  format: "npy"
+
+logging:
+  experiment_id: "unet_denoising_benchmark"
+  track_gpu_memory: true
+  verbose: true

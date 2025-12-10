@@ -1,0 +1,117 @@
+# Classical vs ML Benchmark Configuration
+#
+# Compares classical signal processing methods against ML-based approaches
+# across multiple datasets and evaluation metrics.
+
+benchmark:
+  name: "classical_vs_ml"
+  description: "Comprehensive comparison of classical and ML reconstruction methods"
+  author: "Promethium Team"
+  version: "1.0"
+
+datasets:
+  - id: synthetic_noisy
+    path: "data/synthetic_noisy.npy"
+    reference: "data/synthetic_clean.npy"
+    description: "Additive Gaussian noise (10 dB SNR)"
+    
+  - id: synthetic_missing
+    path: "data/synthetic_missing.npy"
+    reference: "data/synthetic_clean.npy"
+    description: "30% missing traces"
+
+pipelines:
+  # Classical methods
+  - name: wiener_filter
+    type: classical
+    config:
+      algorithm: wiener
+      noise_power: 0.01
+      
+  - name: matrix_completion_ista
+    type: classical
+    config:
+      algorithm: ista
+      lambda: 0.1
+      max_iter: 200
+      
+  - name: compressive_sensing_fista
+    type: classical
+    config:
+      algorithm: fista
+      lambda: 0.05
+      max_iter: 300
+      
+  - name: fk_interpolation
+    type: classical
+    config:
+      algorithm: fk_interpolation
+      k_max: 0.5
+      
+  # Deep learning methods
+  - name: unet_v1
+    type: deep_learning
+    config:
+      architecture: unet
+      weights: "models/unet_denoise_v1.pt"
+      device: auto
+      
+  - name: autoencoder_v1
+    type: deep_learning
+    config:
+      architecture: autoencoder
+      weights: "models/autoencoder_v1.pt"
+      device: auto
+      
+  - name: gan_v1
+    type: deep_learning
+    config:
+      architecture: gan
+      weights: "models/gan_generator_v1.pt"
+      device: auto
+
+metrics:
+  primary:
+    - snr
+    - mse
+    - ssim
+    
+  secondary:
+    - psnr
+    - frequency_correlation
+    - coherence
+    
+  compute_per_trace: false
+  aggregate_method: mean
+
+execution:
+  parallel_runs: 1
+  gpu_memory_limit: 8  # GB
+  timeout_per_run: 3600  # seconds
+  
+  # Repeat runs for statistical significance
+  repetitions: 1
+  random_seed: 42
+
+output:
+  results_dir: "benchmarks/results"
+  
+  # Output formats
+  save_csv: true
+  save_json: true
+  
+  # Visualization
+  generate_plots: true
+  plot_types:
+    - bar_chart
+    - box_plot
+    - radar_chart
+    
+  # Report generation
+  generate_report: true
+  report_template: "templates/benchmark_report.md"
+
+logging:
+  experiment_id: "classical_vs_ml_benchmark"
+  log_level: INFO
+  save_intermediate: false

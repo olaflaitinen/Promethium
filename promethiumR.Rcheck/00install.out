@@ -2,9 +2,9 @@
 ** this is package 'promethiumR' version '1.0.4'
 ** using staged installation
 ** R
+** inst
 ** byte-compile and prepare package for lazy loading
 ** help
-No man pages found in package  'promethiumR' 
 *** installing help indices
 ** building package indices
 ** testing if installed package can be loaded from temporary location

@@ -1,0 +1,29 @@
+Package: promethiumR
+Type: Package
+Title: Advanced Seismic Data Recovery and Reconstruction Framework
+Version: 1.0.4
+Authors@R: c(
+    person("Olaf", "Laitinen", email = "olaf.laitinen@gmail.com", 
+           role = c("aut", "cre")))
+Author: Olaf Laitinen [aut, cre]
+Maintainer: Olaf Laitinen <olaf.laitinen@gmail.com>
+Description: Native R implementation of the Promethium framework for seismic 
+    data recovery and reconstruction. Provides algorithms for missing trace 
+    interpolation, 'denoising', and signal reconstruction using classical signal 
+    processing (Wiener filtering, 'bandpass' filters), optimization-based methods 
+    (matrix completion via 'ISTA', compressive sensing via 'FISTA'), and deep 
+    learning (U-Net, 'autoencoders'). Part of the multi-language Promethium 
+    ecosystem with mathematically consistent implementations in Python, Julia, 
+    and Scala.
+License: MIT + file LICENSE
+URL: https://github.com/olaflaitinen/Promethium
+BugReports: https://github.com/olaflaitinen/Promethium/issues
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
+Depends: R (>= 4.0.0)
+Imports: stats
+Suggests: testthat (>= 3.0.0), hdf5r
+Config/testthat/edition: 3
+NeedsCompilation: no
+Packaged: 2025-12-10 12:52:07 UTC; DTU Bioengineering

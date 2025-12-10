@@ -1,0 +1,104 @@
+# Promethium Dataset Registry
+# 
+# This file defines available datasets for download and use with Promethium.
+# Each dataset includes metadata, source URL, format, and license information.
+#
+# Usage:
+#   promethium datasets list
+#   promethium datasets info <dataset-name>
+#   promethium datasets download <dataset-name> --output-dir data/
+
+datasets:
+  # Synthetic datasets for testing and demos
+  synthetic_marmousi:
+    name: "Synthetic Marmousi"
+    description: "Synthetic seismic data generated from the Marmousi velocity model. Ideal for benchmarking reconstruction algorithms."
+    url: "https://github.com/olaflaitinen/Promethium/releases/download/datasets-v1/synthetic_marmousi.zip"
+    format: "segy"
+    size: "50MB"
+    traces: 240
+    samples: 1000
+    sample_rate_ms: 4
+    license: "CC BY-NC 4.0"
+    checksum_sha256: "placeholder"
+    
+  synthetic_simple:
+    name: "Simple Synthetic Gather"
+    description: "Basic synthetic shot gather for quick demos and tutorials. Contains clean reflections and simple velocity structure."
+    url: "https://github.com/olaflaitinen/Promethium/releases/download/datasets-v1/synthetic_simple.zip"
+    format: "npy"
+    size: "5MB"
+    traces: 100
+    samples: 500
+    sample_rate_ms: 2
+    license: "CC BY-NC 4.0"
+    checksum_sha256: "placeholder"
+    
+  synthetic_noisy:
+    name: "Noisy Synthetic Gather"
+    description: "Synthetic data with added Gaussian noise (SNR approximately 10 dB). Use for denoising algorithm evaluation."
+    url: "https://github.com/olaflaitinen/Promethium/releases/download/datasets-v1/synthetic_noisy.zip"
+    format: "npy"
+    size: "5MB"
+    traces: 100
+    samples: 500
+    sample_rate_ms: 2
+    noise_snr_db: 10.0
+    license: "CC BY-NC 4.0"
+    checksum_sha256: "placeholder"
+    
+  synthetic_missing:
+    name: "Missing Traces Synthetic"
+    description: "Synthetic gather with 30% of traces randomly removed. Designed for interpolation and reconstruction testing."
+    url: "https://github.com/olaflaitinen/Promethium/releases/download/datasets-v1/synthetic_missing.zip"
+    format: "npy"
+    size: "4MB"
+    traces: 70
+    samples: 500
+    sample_rate_ms: 2
+    missing_ratio: 0.3
+    license: "CC BY-NC 4.0"
+    checksum_sha256: "placeholder"
+
+  # Public field datasets
+  viking_graben:
+    name: "Viking Graben Line 12"
+    description: "Public domain field dataset from the North Sea Viking Graben. Line 12 from the Norwegian Petroleum Directorate's open data."
+    url: "https://dataunderground.org/dataset/viking-graben-line-12"
+    format: "segy"
+    size: "200MB"
+    traces: 1001
+    samples: 1501
+    sample_rate_ms: 4
+    license: "Public Domain (NPD)"
+    source: "Norwegian Petroleum Directorate / SEG"
+    reference: "https://wiki.seg.org/wiki/Viking_Graben_Line_12"
+    checksum_sha256: "placeholder"
+    
+  mobil_avo:
+    name: "Mobil AVO Viking Graben"
+    description: "Mobil AVO dataset from the Viking Graben. Commonly used for AVO analysis and seismic attribute studies."
+    url: "https://dataunderground.org/dataset/mobil-avo"
+    format: "segy"
+    size: "100MB"
+    license: "Public Domain"
+    source: "Society of Exploration Geophysicists (SEG)"
+    reference: "https://wiki.seg.org/wiki/Mobil_AVO_Mobil_AVO"
+    checksum_sha256: "placeholder"
+
+  poseidon:
+    name: "Poseidon 3D Survey"
+    description: "Public 3D marine seismic survey from the Browse Basin, offshore Western Australia."
+    url: "https://terranubis.com/datainfo/Poseidon-3D"
+    format: "segy"
+    size: "3GB"
+    license: "Open Data (Australian Government)"
+    source: "Geoscience Australia"
+    checksum_sha256: "placeholder"
+
+# Configuration for dataset management
+config:
+  default_download_dir: "data/datasets"
+  verify_checksums: true
+  auto_extract: true
+  cache_dir: ".promethium/cache"

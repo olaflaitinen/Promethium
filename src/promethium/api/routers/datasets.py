@@ -1,17 +1,19 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Body
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Body, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from typing import List
+from typing import List, Optional
 import shutil
 import os
-import glob
 from uuid import uuid4
 
-from promethium.core.database import get_db, Dataset
-from promethium.core.schemas import (
-    DatasetRead, DatasetCreate, 
+from promethium.core.database import get_db
+from promethium.api.models.dataset import Dataset
+from promethium.api.models.user import User
+from promethium.api.schemas.dataset import (
+    DatasetRead, DatasetCreate, DatasetUpdate,
     UploadInitRequest, UploadInitResponse, UploadFinalizeRequest
 )
+from promethium.api.deps.auth import get_current_active_user
 from promethium.core.config import get_settings
 from promethium.core.logging import logger
 
@@ -19,7 +21,10 @@ router = APIRouter(prefix="/datasets", tags=["datasets"])
 settings = get_settings()
 
 @router.post("/upload/init", response_model=UploadInitResponse)
-async def init_upload(request: UploadInitRequest):
+async def init_upload(
+    request: UploadInitRequest,
+    current_user: User = Depends(get_current_active_user)
+):
     """
     Initialize a chunked upload session.
     """
@@ -27,14 +32,15 @@ async def init_upload(request: UploadInitRequest):
     temp_dir = os.path.join(settings.DATA_STORAGE_PATH, "temp", upload_id)
     os.makedirs(temp_dir, exist_ok=True)
     
-    logger.info(f"Initialized upload session: {upload_id}")
+    logger.info(f"Initialized upload session: {upload_id} by user {current_user.id}")
     return UploadInitResponse(upload_id=upload_id, chunk_size=request.chunk_size)
 
 @router.post("/upload/chunk")
 async def upload_chunk(
     upload_id: str = Form(...),
     chunk_index: int = Form(...),
-    file: UploadFile = File(...)
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_active_user)
 ):
     """
     Upload a single chunk of the file.
@@ -57,7 +63,8 @@ async def upload_chunk(
 @router.post("/upload/finalize", response_model=DatasetRead)
 async def finalize_upload(
     request: UploadFinalizeRequest,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
 ):
     """
     Merge chunks and create dataset record.
@@ -66,15 +73,10 @@ async def finalize_upload(
     if not os.path.exists(temp_dir):
         raise HTTPException(status_code=404, detail="Upload session not found")
     
-    # Target file
-    # unique file ID is already the upload_id for simplicity, or we generate new one
     filename = f"{request.upload_id}_{request.name}"
-    # Sanitize filename if needed, but uuid prefix makes it safe-ish
-    # Ideally keep original extension if possible or infer from format
-    # But user didn't send extension in params explicitly, assume strictly binary content
     
-    # We might want to fix extension based on format (segy -> .sgy)
-    if request.format.upper() == "SEGY" and not filename.lower().endswith(('.sgy', '.segy')):
+    # Auto-append extension if missing and format is known
+    if request.format and request.format.upper() == "SEGY" and not filename.lower().endswith(('.sgy', '.segy')):
         filename += ".sgy"
         
     final_path = os.path.join(settings.DATA_STORAGE_PATH, filename)
@@ -98,11 +100,16 @@ async def finalize_upload(
     # Cleanup
     shutil.rmtree(temp_dir)
     
-    # DB Record
+    # Calculate size
+    size_bytes = os.path.getsize(final_path)
+
+    # Create DB Record
     new_dataset = Dataset(
         name=request.name,
         format=request.format,
         file_path=final_path,
+        size_bytes=size_bytes,
+        owner_id=current_user.id,
         metadata_json={}
     )
     db.add(new_dataset)
@@ -112,70 +119,49 @@ async def finalize_upload(
     logger.info(f"Dataset finalized: {new_dataset.id}")
     return new_dataset
 
-# Keep legacy endpoint for backwards init compatibility or small files if needed
-@router.post("/", response_model=DatasetRead, status_code=201)
-async def create_dataset_legacy(
-    name: str = Form(...),
-    format: str = Form(...),
-    file: UploadFile = File(...),
-    db: AsyncSession = Depends(get_db)
-):
-    # Ensure storage exists
-    os.makedirs(settings.DATA_STORAGE_PATH, exist_ok=True)
-    
-    file_id = str(uuid4())
-    filename = f"{file_id}_{file.filename}"
-    file_path = os.path.join(settings.DATA_STORAGE_PATH, filename)
-    
-    try:
-        with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
-    except Exception as e:
-        logger.error(f"File upload failed: {e}")
-        raise HTTPException(status_code=500, detail="File upload failed")
-
-    new_dataset = Dataset(
-        name=name,
-        format=format,
-        file_path=file_path,
-        metadata_json={}
-    )
-    db.add(new_dataset)
-    await db.commit()
-    await db.refresh(new_dataset)
-    return new_dataset
-
 @router.get("/", response_model=List[DatasetRead])
-async def list_datasets(skip: int = 0, limit: int = 100, db: AsyncSession = Depends(get_db)):
+async def list_datasets(
+    skip: int = 0, 
+    limit: int = 100, 
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    # TODO: Filter by owner or public? For now list all for authenticated users
     result = await db.execute(select(Dataset).offset(skip).limit(limit))
     datasets = result.scalars().all()
     return datasets
 
 @router.get("/{dataset_id}", response_model=DatasetRead)
-async def get_dataset(dataset_id: int, db: AsyncSession = Depends(get_db)):
+async def get_dataset(
+    dataset_id: int, 
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
     dataset = await db.get(Dataset, dataset_id)
     if not dataset:
         raise HTTPException(status_code=404, detail="Dataset not found")
     return dataset
 
 @router.delete("/{dataset_id}", status_code=204)
-async def delete_dataset(dataset_id: int, db: AsyncSession = Depends(get_db)):
-    """
-    Delete a dataset and its associated file.
-    """
+async def delete_dataset(
+    dataset_id: int, 
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
     dataset = await db.get(Dataset, dataset_id)
     if not dataset:
         raise HTTPException(status_code=404, detail="Dataset not found")
+        
+    # Check ownership or admin
+    if dataset.owner_id != current_user.id and current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized to delete this dataset")
     
-    # Delete the file if it exists
     if dataset.file_path and os.path.exists(dataset.file_path):
         try:
             os.remove(dataset.file_path)
-            logger.info(f"Deleted file: {dataset.file_path}")
         except Exception as e:
             logger.warning(f"Could not delete file {dataset.file_path}: {e}")
     
     await db.delete(dataset)
     await db.commit()
-    logger.info(f"Dataset deleted: {dataset_id}")
     return None

@@ -1,55 +1,54 @@
-from fastapi import APIRouter, HTTPException, BackgroundTasks
-from uuid import uuid4
-from datetime import datetime
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from typing import List
 
-from promethium.api.schemas import TrainingRequest, InferenceRequest, JobResponse, JobStatus
-from promethium.workflows.tasks import train_model_task, run_inference_task
+from promethium.core.database import get_db
+from promethium.api.models.ml_model import MLModel
+from promethium.api.models.user import User
+from promethium.api.schemas.ml_model import MLModelRead, MLModelCreate, MLModelUpdate
+from promethium.api.deps.auth import get_current_active_user
+from promethium.core.logging import logger
 
-router = APIRouter(prefix="/ml", tags=["Machine Learning"])
+router = APIRouter(prefix="/ml/models", tags=["ml-models"])
 
-@router.post("/train", response_model=JobResponse)
-async def submit_training_job(request: TrainingRequest):
-    """
-    Submit a new model training job.
-    """
-    # 1. Validation (Check if dataset exists)
-    # verify_dataset(request.dataset_id)
-    
-    # 2. Submit to Celery
-    task = train_model_task.delay(request.model_dump())
-    
-    return JobResponse(
-        job_id=task.id,
-        status=JobStatus.QUEUED,
-        created_at=datetime.utcnow()
+@router.post("/", response_model=MLModelRead, status_code=201)
+async def create_model(
+    model_in: MLModelCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    new_model = MLModel(
+        name=model_in.name,
+        type=model_in.type,
+        version=model_in.version,
+        description=model_in.description,
+        config=model_in.config,
+        metrics=model_in.metrics
     )
+    db.add(new_model)
+    await db.commit()
+    await db.refresh(new_model)
+    return new_model
 
-@router.post("/predict", response_model=JobResponse)
-async def submit_inference_job(request: InferenceRequest):
-    """
-    Submit a batch inference job.
-    """
-    task = run_inference_task.delay(request.model_dump())
-    
-    return JobResponse(
-        job_id=task.id,
-        status=JobStatus.QUEUED,
-        created_at=datetime.utcnow()
-    )
+@router.get("/", response_model=List[MLModelRead])
+async def list_models(
+    skip: int = 0, 
+    limit: int = 100, 
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    result = await db.execute(select(MLModel).offset(skip).limit(limit))
+    models = result.scalars().all()
+    return models
 
-@router.get("/jobs/{job_id}")
-async def get_job_status(job_id: str):
-    """
-    Check status of a background job.
-    """
-    # Check ResultBackend
-    from celery.result import AsyncResult
-    from promethium.workflows.tasks import celery_app
-    
-    res = AsyncResult(job_id, app=celery_app)
-    
-    return {
-        "job_id": job_id,
-        "status": res.state,
-        "result": res.result if res.ready() else None
-    }
+@router.get("/{model_id}", response_model=MLModelRead)
+async def get_model(
+    model_id: int, 
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    model = await db.get(MLModel, model_id)
+    if not model:
+        raise HTTPException(status_code=404, detail="Model not found")
+    return model

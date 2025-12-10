@@ -92,8 +92,17 @@ viz = [
 
 # Full installation with all optional dependencies
 all = [
-    "promethium[server,dev,viz]",
+    "promethium[server,dev,viz,cli]",
 ]
+
+# CLI dependencies
+cli = [
+    "typer>=0.9.0",
+    "rich>=13.0.0",
+]
+
+[project.scripts]
+promethium = "promethium.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/olaflaitinen/Promethium"

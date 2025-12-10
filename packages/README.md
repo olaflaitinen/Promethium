@@ -79,7 +79,7 @@ result = run(pipe, ds)
 
 ```scala
 // Add to build.sbt
-libraryDependencies += "io.promethium" %% "promethium-scala" % "1.0.4"
+libraryDependencies += "io.github.olaflaitinen" %% "promethium-scala" % "1.0.4"
 
 import io.promethium.core._
 val ds = SeismicDataset(traces, dt = 0.004)

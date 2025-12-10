@@ -5,7 +5,7 @@
 Add to `build.sbt`:
 
 ```scala
-libraryDependencies += "io.promethium" %% "promethium-scala" % "1.0.4"
+libraryDependencies += "io.github.olaflaitinen" %% "promethium-scala" % "1.0.4"
 ```
 
 Or build from source:

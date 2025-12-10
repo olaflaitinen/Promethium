@@ -109,6 +109,6 @@ After publication, verify package availability:
 |---------|------------------|
 | promethiumR | https://CRAN.R-project.org/package=promethiumR |
 | Promethium.jl | https://juliahub.com/ui/Packages/Promethium |
-| promethium-scala | https://search.maven.org/artifact/io.promethium/promethium-scala_2.13 |
+| promethium-scala | https://search.maven.org/artifact/io.github.olaflaitinen/promethium-scala_2.13 |
 
 Once verified, update `docs/distribution.md` status and README badges.

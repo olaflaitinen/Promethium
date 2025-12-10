@@ -1,0 +1,234 @@
+.page-container {
+    padding: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 2rem;
+}
+
+.header-content h1 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: var(--text-primary, #1a1a2e);
+}
+
+.subtitle {
+    color: var(--text-secondary, #6c7589);
+    margin: 0;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.btn-secondary {
+    background: var(--surface, #f8f9fc);
+    color: var(--text-primary, #1a1a2e);
+    border: 1px solid var(--border, #e2e8f0);
+}
+
+.btn-ghost {
+    background: transparent;
+    color: var(--primary, #6366f1);
+}
+
+.benchmarks-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    gap: 1.5rem;
+}
+
+.benchmark-card {
+    background: var(--surface, white);
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid var(--border, #e2e8f0);
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+}
+
+.benchmark-card:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.benchmark-card.is-running {
+    border-color: #3b82f6;
+    background: linear-gradient(to right, rgba(59, 130, 246, 0.05), transparent);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.75rem;
+}
+
+.card-header h3 {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 600;
+}
+
+.status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: capitalize;
+}
+
+.status-running {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.status-completed {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.status-failed {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.status-pending {
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+.description {
+    color: var(--text-secondary, #6c7589);
+    font-size: 0.875rem;
+    margin: 0 0 1rem 0;
+    line-height: 1.5;
+    flex: 1;
+}
+
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.metric-box {
+    background: var(--surface-light, #f8f9fc);
+    padding: 0.75rem;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.metric-value {
+    display: block;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--primary, #6366f1);
+}
+
+.metric-label {
+    display: block;
+    font-size: 0.65rem;
+    color: var(--text-tertiary, #9ca3af);
+    text-transform: uppercase;
+    margin-top: 0.25rem;
+}
+
+.card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border, #e2e8f0);
+    margin-top: auto;
+}
+
+.footer-info {
+    font-size: 0.75rem;
+    color: var(--text-tertiary, #9ca3af);
+}
+
+.footer-info span {
+    display: block;
+}
+
+.card-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.running-indicator {
+    width: 8px;
+    height: 8px;
+    background: #3b82f6;
+    border-radius: 50%;
+    animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.5;
+        transform: scale(0.8);
+    }
+}
+
+.loading {
+    text-align: center;
+    padding: 4rem;
+    color: var(--text-secondary, #6c7589);
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--border, #e2e8f0);
+    border-top-color: var(--primary, #6366f1);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (max-width: 600px) {
+    .metrics-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}

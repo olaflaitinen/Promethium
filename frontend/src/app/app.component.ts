@@ -23,9 +23,12 @@ export class AppComponent {
     mainNavItems: NavItem[] = [
         { path: '/dashboard', label: 'Dashboard', icon: Icons.dashboard },
         { path: '/datasets', label: 'Datasets', icon: Icons.database },
-        { path: '/jobs', label: 'Pipelines', icon: Icons.zap },
+        { path: '/pipelines', label: 'Pipelines', icon: Icons.workflow },
+        { path: '/jobs', label: 'Jobs', icon: Icons.zap },
         { path: '/models', label: 'Models', icon: Icons.brain },
-        { path: '/results', label: 'Results', icon: Icons.barChart },
+        { path: '/experiments', label: 'Experiments', icon: Icons.flask },
+        { path: '/benchmarks', label: 'Benchmarks', icon: Icons.barChart },
+        { path: '/results', label: 'Results', icon: Icons.activity },
     ];
 
     secondaryNavItems: NavItem[] = [

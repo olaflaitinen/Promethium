@@ -1,0 +1,61 @@
+<div class="page-container">
+    <div class="page-header">
+        <div class="header-content">
+            <h1>Experiments</h1>
+            <p class="subtitle">Track and compare multiple runs and configurations</p>
+        </div>
+        <button class="btn btn-primary">
+            <span [innerHTML]="icons.plus"></span>
+            New Experiment
+        </button>
+    </div>
+
+    <div class="experiments-list" *ngIf="!loading">
+        <div class="experiment-card" *ngFor="let exp of experiments">
+            <div class="card-main">
+                <div class="card-header">
+                    <h3>{{ exp.name }}</h3>
+                    <span class="status-badge" [ngClass]="getStatusClass(exp.status)">
+                        {{ exp.status }}
+                    </span>
+                </div>
+                <p class="description">{{ exp.description }}</p>
+                <div class="card-meta">
+                    <span class="meta-item">
+                        <strong>{{ exp.job_count }}</strong> jobs
+                    </span>
+                    <span class="meta-item">
+                        Created {{ formatDate(exp.created_at) }}
+                    </span>
+                </div>
+            </div>
+            <div class="card-metrics" *ngIf="exp.metrics">
+                <div class="metric" *ngIf="exp.metrics.avg_snr">
+                    <span class="metric-value">{{ exp.metrics.avg_snr | number:'1.1-1' }}</span>
+                    <span class="metric-label">Avg SNR</span>
+                </div>
+                <div class="metric" *ngIf="exp.metrics.avg_psnr">
+                    <span class="metric-value">{{ exp.metrics.avg_psnr | number:'1.1-1' }}</span>
+                    <span class="metric-label">Avg PSNR</span>
+                </div>
+                <div class="metric best-run" *ngIf="exp.metrics.best_run">
+                    <span class="metric-value">{{ exp.metrics.best_run }}</span>
+                    <span class="metric-label">Best Run</span>
+                </div>
+            </div>
+            <div class="card-actions">
+                <button class="btn btn-ghost" routerLink="/jobs" [queryParams]="{experiment: exp.id}">
+                    View Jobs
+                </button>
+                <button class="btn btn-ghost">
+                    Compare
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="loading" *ngIf="loading">
+        <div class="spinner"></div>
+        <p>Loading experiments...</p>
+    </div>
+</div>

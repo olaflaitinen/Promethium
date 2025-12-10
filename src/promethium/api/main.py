@@ -6,7 +6,7 @@ from promethium.core.config import get_settings
 from promethium.core.config import get_settings
 from promethium.core.logging import logger
 from promethium.core.database import engine, Base
-from promethium.api.routers import datasets, jobs, ml, auth, users, pipelines, experiments, results, system, websockets
+from promethium.api.routers import datasets, jobs, ml, auth, users, pipelines, experiments, results, system, websockets, benchmarks
 
 settings = get_settings()
 
@@ -49,4 +49,5 @@ app.include_router(pipelines.router, prefix=settings.API_PREFIX)
 app.include_router(experiments.router, prefix=settings.API_PREFIX)
 app.include_router(results.router, prefix=settings.API_PREFIX)
 app.include_router(system.router, prefix=settings.API_PREFIX)
+app.include_router(benchmarks.router, prefix=settings.API_PREFIX)
 app.include_router(websockets.router)

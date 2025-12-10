@@ -11,6 +11,7 @@ from promethium.api.models.job import Job
 from promethium.api.models.ml_model import MLModel
 from promethium.api.models.experiment import Experiment
 from promethium.api.models.result import Result
+from promethium.api.models.benchmark import Benchmark
 from promethium.api.models.base import Base
 
 __all__ = [
@@ -22,4 +23,5 @@ __all__ = [
     "MLModel",
     "Experiment",
     "Result",
+    "Benchmark",
 ]

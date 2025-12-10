@@ -1,0 +1,75 @@
+<div class="page-container">
+    <div class="page-header">
+        <div class="header-content">
+            <h1>Pipelines</h1>
+            <p class="subtitle">Configure and manage processing workflows</p>
+        </div>
+        <button class="btn btn-primary" (click)="openEditor()">
+            <span [innerHTML]="icons.plus"></span>
+            New Pipeline
+        </button>
+    </div>
+
+    <div class="pipelines-grid" *ngIf="!loading">
+        <div class="pipeline-card" *ngFor="let pipeline of pipelines">
+            <div class="card-header">
+                <h3>{{ pipeline.name }}</h3>
+                <span class="status-badge" [ngClass]="getStatusClass(pipeline.status)">
+                    {{ pipeline.status }}
+                </span>
+            </div>
+            <p class="description">{{ pipeline.description }}</p>
+            <div class="config-preview">
+                <span class="step-count">{{ pipeline.config['steps']?.length || 0 }} steps</span>
+                <span class="date">Created {{ formatDate(pipeline.created_at) }}</span>
+            </div>
+            <div class="card-actions">
+                <button class="btn btn-secondary" (click)="openEditor(pipeline)">
+                    <span [innerHTML]="icons.edit"></span>
+                    Edit
+                </button>
+                <button class="btn btn-ghost" routerLink="/jobs" [queryParams]="{pipeline: pipeline.id}">
+                    Run
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="loading" *ngIf="loading">
+        <div class="spinner"></div>
+        <p>Loading pipelines...</p>
+    </div>
+
+    <!-- Config Editor Modal -->
+    <div class="modal-overlay" *ngIf="showEditor" (click)="closeEditor()">
+        <div class="modal-content" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h2>{{ editingPipeline ? 'Edit Pipeline' : 'New Pipeline' }}</h2>
+                <button class="btn-close" (click)="closeEditor()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Pipeline Name</label>
+                    <input type="text" class="input" [value]="editingPipeline?.name || ''" placeholder="Enter pipeline name">
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <input type="text" class="input" [value]="editingPipeline?.description || ''" placeholder="Enter description">
+                </div>
+                <div class="form-group">
+                    <label>Configuration (JSON)</label>
+                    <textarea 
+                        class="config-editor" 
+                        [(ngModel)]="configText"
+                        rows="15"
+                        spellcheck="false">
+                    </textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" (click)="closeEditor()">Cancel</button>
+                <button class="btn btn-primary" (click)="savePipeline()">Save Pipeline</button>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,74 @@
+<div class="page-container">
+    <div class="page-header">
+        <div class="header-content">
+            <h1>Benchmarks</h1>
+            <p class="subtitle">Standardized performance evaluation and comparison</p>
+        </div>
+        <button class="btn btn-primary">
+            <span [innerHTML]="icons.plus"></span>
+            New Benchmark
+        </button>
+    </div>
+
+    <div class="benchmarks-grid" *ngIf="!loading">
+        <div class="benchmark-card" *ngFor="let bench of benchmarks"
+            [ngClass]="{'is-running': bench.status === 'running'}">
+            <div class="card-header">
+                <h3>{{ bench.name }}</h3>
+                <span class="status-badge" [ngClass]="getStatusClass(bench.status)">
+                    {{ bench.status }}
+                </span>
+            </div>
+
+            <p class="description">{{ bench.description }}</p>
+
+            <div class="metrics-grid" *ngIf="bench.metrics">
+                <div class="metric-box" *ngIf="bench.metrics.snr">
+                    <span class="metric-value">{{ bench.metrics.snr | number:'1.1-1' }} dB</span>
+                    <span class="metric-label">SNR</span>
+                </div>
+                <div class="metric-box" *ngIf="bench.metrics.psnr">
+                    <span class="metric-value">{{ bench.metrics.psnr | number:'1.1-1' }} dB</span>
+                    <span class="metric-label">PSNR</span>
+                </div>
+                <div class="metric-box" *ngIf="bench.metrics.ssim">
+                    <span class="metric-value">{{ bench.metrics.ssim | number:'1.2-2' }}</span>
+                    <span class="metric-label">SSIM</span>
+                </div>
+                <div class="metric-box" *ngIf="bench.metrics.processing_time">
+                    <span class="metric-value">{{ bench.metrics.processing_time | number:'1.1-1' }}s</span>
+                    <span class="metric-label">Latency</span>
+                </div>
+            </div>
+
+            <div class="card-footer">
+                <div class="footer-info">
+                    <span *ngIf="bench.duration_seconds" class="duration">
+                        Duration: {{ formatDuration(bench.duration_seconds) }}
+                    </span>
+                    <span *ngIf="bench.completed_at" class="completed">
+                        Completed: {{ formatDate(bench.completed_at) }}
+                    </span>
+                </div>
+                <div class="card-actions">
+                    <button class="btn btn-secondary" *ngIf="bench.status === 'pending'" (click)="runBenchmark(bench)">
+                        Run
+                    </button>
+                    <button class="btn btn-ghost" *ngIf="bench.status === 'completed'" routerLink="/results"
+                        [queryParams]="{benchmark: bench.id}">
+                        View Results
+                    </button>
+                    <button class="btn btn-ghost" *ngIf="bench.status === 'running'">
+                        <span class="running-indicator"></span>
+                        Running...
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="loading" *ngIf="loading">
+        <div class="spinner"></div>
+        <p>Loading benchmarks...</p>
+    </div>
+</div>

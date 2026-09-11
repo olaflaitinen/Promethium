@@ -9,7 +9,6 @@ import torch
 
 from promethium_seismic.core.config import get_settings
 from promethium_seismic.core.logging import get_logger
-from promethium_seismic.ml.models.registry import ModelRegistry
 
 logger = get_logger(__name__)
 settings = get_settings()
@@ -30,68 +29,98 @@ class InferenceEngine:
     - Reassembly
     """
 
-    def __init__(self, model_path: str, device: str = None):
-        self.device = device or settings.DEFAULT_DEVICE
+    def __init__(
+        self, model=None, model_path: str | None = None, device: str | None = None
+    ):
+        """Build an engine around a model.
 
-        # Load Checkpoint & Config
-        # In real scenario: load from .pt file
-        # Mocking for implementation structure
-        self.config = {"n_channels": 1, "n_classes": 1}  # Mock
-        model_name = "unet"  # Mock
+        Args:
+            model: An already loaded model. Use this when the caller has one
+                in hand, which is the common case from Python.
+            model_path: A checkpoint to load instead. Use this from a script
+                or the command line.
+            device: Where to run. Defaults to the configured device, and
+                resolves "auto" to cuda when one is present.
 
-        self.model = ModelRegistry.create(model_name, self.config)
+        Raises:
+            ValueError: if neither a model nor a path is given.
+
+        This used to take a model_path, ignore it, and build a fresh
+        untrained U-Net from a config marked "Mock", so a caller passing a
+        trained checkpoint got random weights and no warning.
+        """
+        if model is None and model_path is None:
+            raise ValueError("pass either a model or a model_path")
+
+        resolved = device or settings.DEFAULT_DEVICE
+        if resolved == "auto":
+            resolved = "cuda" if torch.cuda.is_available() else "cpu"
+        self.device = resolved
+
+        if model is None:
+            from promethium_seismic.ml.train import PromethiumModule
+
+            model = PromethiumModule.load_from_checkpoint(
+                model_path, map_location=self.device
+            )
+
+        self.model = model
         self.model.to(self.device)
         self.model.eval()
+        self.config = getattr(model, "config", {})
 
     @torch.no_grad()
-    def run(
+    def reconstruct_array(
         self,
-        input_path: str,
-        output_path: str,
+        data: np.ndarray,
         patch_size: int = 128,
         overlap: float = 0.25,
         batch_size: int = 8,
-    ):
-        input_path = Path(input_path)
-        output_path = Path(output_path)
+    ) -> np.ndarray:
+        """Reconstruct an array in memory, tile by tile.
 
-        logger.info(f"Starting inference on {input_path}")
+        Args:
+            data: A two dimensional gather.
+            patch_size: Side of the square window the model sees.
+            overlap: Fraction of a window that overlaps the next one. The
+                blend weights are a cosine taper, so overlapping windows
+                cross fade instead of leaving seams.
+            batch_size: Windows per forward pass.
 
-        # Load Data
-        if input_path.suffix == ".zarr":
-            # Imported here so that the ml extra does not drag in the
-            # io extra: this is the only line in the module that reads
-            # a store, and segyio belongs to a different install.
-            from promethium_seismic.io.zarr_wrapper import load_zarr
+        Returns:
+            The reconstruction, the same shape as the input.
 
-            data = load_zarr(input_path)
-        else:
-            # Fallback or error
+        Raises:
+            ValueError: if the input is not two dimensional, or is smaller
+                than one window.
+        """
+        values = np.asarray(getattr(data, "values", data), dtype=np.float32)
+        if values.ndim != 2:
+            raise ValueError(f"expected a 2D gather, got shape {values.shape}")
+
+        n_traces, n_time = values.shape
+        if n_traces < patch_size or n_time < patch_size:
             raise ValueError(
-                f"Unsupported format {input_path.suffix}. Convert to Zarr first."
+                f"the gather is {values.shape} and the window is "
+                f"{patch_size}: reduce patch_size to fit"
             )
 
-        n_traces, n_time = data.shape
-        stride = int(patch_size * (1 - overlap))
+        stride = max(1, int(patch_size * (1 - overlap)))
 
-        # Output Buffer
-        output = np.zeros_like(data.values)
-        weights = np.zeros_like(data.values)
+        output = np.zeros_like(values)
+        weights = np.zeros_like(values)
 
-        # Cosine Window for blending
-        # 1D window
-        w = np.sin(np.pi * np.arange(0.5, patch_size + 0.5) / patch_size)
-        # 2D window
-        window = np.outer(w, w)
+        # A cosine taper in each direction, so that overlapping windows sum
+        # to roughly one and the seams do not show.
+        taper = np.sin(np.pi * np.arange(0.5, patch_size + 0.5) / patch_size)
+        window = np.outer(taper, taper)
 
-        # generate patches
-        patches = []
-        coords = []
+        patches: list[np.ndarray] = []
+        coords: list[tuple[int, int]] = []
 
         for t in range(0, n_traces - patch_size + 1, stride):
             for s in range(0, n_time - patch_size + 1, stride):
-                patch = data[t : t + patch_size, s : s + patch_size].values
-                patches.append(patch)
+                patches.append(values[t : t + patch_size, s : s + patch_size])
                 coords.append((t, s))
 
                 if len(patches) == batch_size:
@@ -99,30 +128,75 @@ class InferenceEngine:
                     patches = []
                     coords = []
 
-        # Process remaining
         if patches:
             self._process_batch(patches, coords, output, weights, window)
 
-        # Normalize by weights
-        output /= weights + 1e-8
+        # Where no window landed, keep the input rather than dividing by a
+        # weight of zero and returning noise.
+        covered = weights > 1e-8
+        result = values.copy()
+        result[covered] = output[covered] / weights[covered]
+        return result
 
-        # Save
-        # Reuse Zarr wrapper logic or save as specific reconstruction format
-        # For now, just logging done
-        logger.info("Inference complete. Saving results...")
+    def run(
+        self,
+        input_path: str,
+        output_path: str,
+        patch_size: int = 128,
+        overlap: float = 0.25,
+        batch_size: int = 8,
+    ) -> np.ndarray:
+        """Reconstruct a file and write the result.
+
+        Args:
+            input_path: A Zarr store to read.
+            output_path: Where to write the reconstruction, as .npy.
+            patch_size: Side of the square window the model sees.
+            overlap: Fraction of a window that overlaps the next one.
+            batch_size: Windows per forward pass.
+
+        Returns:
+            The reconstruction, so a caller does not have to read back what
+            it just wrote.
+
+        Raises:
+            ValueError: if the input is not a Zarr store.
+
+        This used to compute the reconstruction and then return None without
+        writing anything, under a log line saying "Saving results...".
+        """
+        source = Path(input_path)
+        target = Path(output_path)
+
+        logger.info(f"Starting inference on {source}")
+
+        if source.suffix != ".zarr":
+            raise ValueError(
+                f"Unsupported format {source.suffix}. Convert to Zarr first."
+            )
+
+        # Imported here so that the ml extra does not drag in the io extra:
+        # this is the only line in the module that reads a store.
+        from promethium_seismic.io.zarr_wrapper import load_zarr
+
+        data = load_zarr(source)
+        result = self.reconstruct_array(
+            data, patch_size=patch_size, overlap=overlap, batch_size=batch_size
+        )
+
+        target.parent.mkdir(parents=True, exist_ok=True)
+        np.save(target, result)
+        logger.info(f"Inference complete, wrote {target}")
+        return result
 
     def _process_batch(self, patches, coords, output, weights, window):
-        # Prepare Batch
+        """Run one batch of windows and accumulate them into the output."""
         batch = np.array(patches)  # B, H, W
-        batch = (
-            torch.from_numpy(batch).unsqueeze(1).float().to(self.device)
-        )  # B, 1, H, W
+        batch = torch.from_numpy(batch).unsqueeze(1).float().to(self.device)
 
-        # Infer
         pred = self.model(batch)
         pred = pred.cpu().numpy()[:, 0, :, :]
 
-        # Accumulate
         for i, (t, s) in enumerate(coords):
             h, w = pred[i].shape
             output[t : t + h, s : s + w] += pred[i] * window
@@ -180,7 +254,6 @@ def reconstruct(
     Returns:
         Reconstructed numpy array.
     """
-    engine = InferenceEngine(
-        model, device=device, patch_size=patch_size, overlap=overlap
-    )
-    return engine.run(data)
+    window = patch_size[0] if isinstance(patch_size, tuple) else patch_size
+    engine = InferenceEngine(model=model, device=device)
+    return engine.reconstruct_array(data, patch_size=window, overlap=overlap)

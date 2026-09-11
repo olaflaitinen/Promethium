@@ -21,9 +21,9 @@ class SoftImpute(RecoveryAlgorithm):
         self.max_iters = max_iters
         self.tol = tol
         self.rank = rank  # Optimization: Use truncated SVD
-        self.X_reconstructed = None
+        self.X_reconstructed: np.ndarray | None = None
 
-    def fit(self, data: np.ndarray, mask: np.ndarray = None) -> "SoftImpute":
+    def fit(self, data: np.ndarray, mask: np.ndarray | None = None) -> "SoftImpute":
         if mask is None:
             mask = ~np.isnan(data)
 
@@ -62,7 +62,7 @@ class SoftImpute(RecoveryAlgorithm):
         self.X_reconstructed = X
         return self
 
-    def transform(self, data: np.ndarray, mask: np.ndarray = None) -> np.ndarray:
+    def transform(self, data: np.ndarray, mask: np.ndarray | None = None) -> np.ndarray:
         if self.X_reconstructed is None:
             raise RuntimeError("Model must be fitted before calling transform")
         return self.X_reconstructed

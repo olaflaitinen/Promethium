@@ -41,7 +41,10 @@ jobs:
     - name: Type check with mypy
       run: |
         pip install mypy
-        mypy src/promethium_seismic --ignore-missing-imports
+        # Reporting only here: this job runs on 3.10 and 3.11 too, where
+        # numpy's stubs cannot be parsed. The gating type check is in
+        # ci.yml, on 3.12.
+        mypy src/promethium_seismic
       continue-on-error: true
     
     - name: Test with pytest

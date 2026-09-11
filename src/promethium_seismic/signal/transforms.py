@@ -146,7 +146,10 @@ def ifft(data: np.ndarray, axis: int = -1) -> np.ndarray:
 
 
 def wavelet_transform(
-    data: np.ndarray, wavelet: str = "morl", scales: np.ndarray = None, fs: float = 1.0
+    data: np.ndarray,
+    wavelet: str = "morl",
+    scales: np.ndarray | None = None,
+    fs: float = 1.0,
 ) -> np.ndarray:
     """
     Compute the Continuous Wavelet Transform.

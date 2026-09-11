@@ -20,7 +20,7 @@ class CompressiveSensing(RecoveryAlgorithm):
         self.lamb = lamb
         self.max_iters = max_iters
         self.tol = tol
-        self.reconstructed_data = None
+        self.reconstructed_data: np.ndarray | None = None
 
     def _soft_threshold(self, x: np.ndarray, thresh: float) -> np.ndarray:
         return np.sign(x) * np.maximum(np.abs(x) - thresh, 0.0)
@@ -32,7 +32,9 @@ class CompressiveSensing(RecoveryAlgorithm):
     def _inverse_sparsify(self, coeffs: np.ndarray) -> np.ndarray:
         return idct(idct(coeffs, axis=0, norm="ortho"), axis=1, norm="ortho")
 
-    def fit(self, data: np.ndarray, mask: np.ndarray = None) -> "CompressiveSensing":
+    def fit(
+        self, data: np.ndarray, mask: np.ndarray | None = None
+    ) -> "CompressiveSensing":
         """
         Fit the model to the incomplete data.
         data: Observed seismic data. Missing traces should be filled
@@ -80,7 +82,7 @@ class CompressiveSensing(RecoveryAlgorithm):
         self.reconstructed_data = r
         return self
 
-    def transform(self, data: np.ndarray, mask: np.ndarray = None) -> np.ndarray:
+    def transform(self, data: np.ndarray, mask: np.ndarray | None = None) -> np.ndarray:
         if self.reconstructed_data is None:
             raise RuntimeError("Model must be fitted before calling transform")
         return self.reconstructed_data

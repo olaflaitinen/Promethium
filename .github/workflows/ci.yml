@@ -12,14 +12,21 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
-    - name: Set up Python 3.10
+    # 3.12 because numpy ships stubs written in PEP 695 syntax and
+    # mypy will not parse them when targeting an older Python. The
+    # test matrix below still covers 3.10 through 3.12.
+    - name: Set up Python 3.12
       uses: actions/setup-python@v5
       with:
-        python-version: "3.10"
+        python-version: "3.12"
         
     - name: Install Dependencies
       run: |
         python -m pip install --upgrade pip
+        # The package and its extras, not just the tools. mypy with
+        # nothing installed sees every array operation as Any and
+        # reports a clean run that checked nothing.
+        pip install -e ".[dev,ml,viz]"
         pip install ruff mypy
         
     - name: Lint with Ruff
@@ -32,7 +39,9 @@ jobs:
         
     - name: Type check with Mypy
       run: |
-        mypy src --ignore-missing-imports
+        # No flags: the settings live in pyproject.toml, where each
+        # one carries the reason it is set.
+        mypy src
 
   test:
     runs-on: ubuntu-latest

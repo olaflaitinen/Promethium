@@ -56,17 +56,24 @@ def train_model(
     save_path: str = "model.pth",
 ) -> dict[str, list]:
 
-    device = torch.device(device if torch.cuda.is_available() else "cpu")
-    model.to(device)
+    # A separate name, because the parameter is the string a caller
+    # passed and this is the resolved device object. Reusing the name
+    # made the two different things look like one.
+    target = torch.device(device if torch.cuda.is_available() else "cpu")
+    model.to(target)
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     criterion = nn.MSELoss()
 
-    history = {"train_loss": [], "val_loss": [], "val_psnr": []}
+    history: dict[str, list[float]] = {
+        "train_loss": [],
+        "val_loss": [],
+        "val_psnr": [],
+    }
 
-    logger.info(f"Starting training on {device} for {epochs} epochs")
+    logger.info(f"Starting training on {target} for {epochs} epochs")
 
     for epoch in range(epochs):
-        train_loss = train_one_epoch(model, train_loader, optimizer, criterion, device)
+        train_loss = train_one_epoch(model, train_loader, optimizer, criterion, target)
 
         # Validation
         model.eval()
@@ -74,7 +81,7 @@ def train_model(
         val_mse_accum = 0.0
         with torch.no_grad():
             for inputs, masks in val_loader:
-                inputs, masks = inputs.to(device), masks.to(device)
+                inputs, masks = inputs.to(target), masks.to(target)
                 masked_inputs = inputs * masks
                 outputs = model(masked_inputs)
                 loss = criterion(outputs, inputs)

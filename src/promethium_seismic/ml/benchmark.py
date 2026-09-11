@@ -96,11 +96,14 @@ class BenchmarkEngine:
                 ssim_list.append(ssim_val)
 
         metrics = {
-            "mse": np.mean(mse_list),
-            "mae": np.mean(mae_list),
-            "snr": np.mean(snr_list),
-            "psnr": np.mean(psnr_list),
-            "ssim": np.mean(ssim_list),
+            "mse": float(np.mean(mse_list)),
+            # float() rather than the numpy scalar: the return type says
+            # float, and a float64 serialises differently through json and
+            # compares differently against a plain float.
+            "mae": float(np.mean(mae_list)),
+            "snr": float(np.mean(snr_list)),
+            "psnr": float(np.mean(psnr_list)),
+            "ssim": float(np.mean(ssim_list)),
         }
 
         logger.info(f"Benchmark Results: {json.dumps(metrics, indent=2)}")

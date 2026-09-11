@@ -166,7 +166,17 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 
 [tool.mypy]
-python_version = "3.10"
-warn_return_any = true
+# No python_version. numpy ships stubs written with PEP 695 syntax, which
+# mypy refuses to parse when told to target an older Python, so pinning a
+# version below 3.12 fails the run on numpy rather than on this code. The
+# type check runs on one interpreter; the test matrix covers the range the
+# package supports.
 warn_unused_configs = true
 ignore_missing_imports = true
+
+# numpy and scipy return Any through the stubs that resolve here, so a
+# function annotated to return an ndarray, and returning one, is reported as
+# returning Any. That is a statement about the stubs rather than about this
+# code, and the alternative is a cast on every numerical return, which adds
+# noise without adding safety.
+warn_return_any = false

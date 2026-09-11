@@ -12,7 +12,7 @@ class RecoveryAlgorithm(ABC):
     Abstract base class for all recovery/reconstruction algorithms.
     """
 
-    def __init__(self, params: dict[str, Any] = None):
+    def __init__(self, params: dict[str, Any] | None = None):
         self.params = params or {}
 
     @abstractmethod

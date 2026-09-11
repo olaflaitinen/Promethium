@@ -224,7 +224,7 @@ def load_sac(path: str, **kwargs):
     )
 
 
-def get_model(name: str, *, device: str = None):
+def get_model(name: str, *, device: str | None = None):
     """
     Get a pre-defined seismic reconstruction model by name.
 
@@ -256,7 +256,7 @@ def get_model(name: str, *, device: str = None):
     return model
 
 
-def run_recovery(data, pipeline=None, preset: str = None, **kwargs):
+def run_recovery(data, pipeline=None, preset: str | None = None, **kwargs):
     """
     Run seismic data recovery using a pipeline.
 

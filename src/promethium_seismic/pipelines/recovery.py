@@ -322,6 +322,10 @@ class SeismicRecoveryPipeline:
             # Run inference
             inp = torch.from_numpy(padded).float().unsqueeze(0).unsqueeze(0)
             inp = inp.to(self.device)
+            # Loaded by load_model, which run() calls first. The
+            # assertion is for the type checker and documents the
+            # order for a reader.
+            assert self._model is not None, "call load_model first"
             out = self._model(inp)
             result = out.cpu().numpy()[0, 0, : processed.shape[0], : processed.shape[1]]
         else:
@@ -392,6 +396,10 @@ class SeismicRecoveryPipeline:
         batch = np.stack(patches, axis=0)
         batch_tensor = torch.from_numpy(batch).float().unsqueeze(1).to(self.device)
 
+        # Loaded by load_model, which run() calls first. The
+        # assertion is for the type checker and documents the
+        # order for a reader.
+        assert self._model is not None, "call load_model first"
         pred = self._model(batch_tensor)
         pred = pred.cpu().numpy()[:, 0, :, :]
 

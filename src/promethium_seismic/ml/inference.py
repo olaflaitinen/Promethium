@@ -60,6 +60,9 @@ class InferenceEngine:
         if model is None:
             from promethium_seismic.ml.train import PromethiumModule
 
+            # model_path is not None here: the constructor refuses to be
+            # built with neither a model nor a path.
+            assert model_path is not None
             model = PromethiumModule.load_from_checkpoint(
                 model_path, map_location=self.device
             )
@@ -179,7 +182,10 @@ class InferenceEngine:
         # this is the only line in the module that reads a store.
         from promethium_seismic.io.zarr_wrapper import load_zarr
 
-        data = load_zarr(source)
+        # load_zarr returns an xarray DataArray; reconstruct_array takes
+        # the values off it either way, and the annotation should say what
+        # is passed rather than what is accepted.
+        data = np.asarray(load_zarr(source))
         result = self.reconstruct_array(
             data, patch_size=patch_size, overlap=overlap, batch_size=batch_size
         )
@@ -203,7 +209,7 @@ class InferenceEngine:
             weights[t : t + h, s : s + w] += window
 
 
-def load_model(path: str, device: str = None) -> "PromethiumModule":
+def load_model(path: str, device: str | None = None) -> "PromethiumModule":
     """
     Load a pre-trained model from a checkpoint.
 
@@ -237,7 +243,7 @@ def load_model(path: str, device: str = None) -> "PromethiumModule":
 def reconstruct(
     data: np.ndarray,
     model: "PromethiumModule",
-    device: str = None,
+    device: str | None = None,
     patch_size: tuple[int, int] = (128, 128),
     overlap: float = 0.25,
 ) -> np.ndarray:

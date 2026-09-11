@@ -66,12 +66,14 @@ if PYDANTIC_SETTINGS_AVAILABLE:
             env_file=".env", case_sensitive=True, extra="ignore"
         )
 else:
-    # Simple settings class for core library usage without pydantic-settings
-    class Settings:
+    # The same name under a different branch, on purpose: the library works
+    # with or without pydantic-settings, and the caller should not have to
+    # know which one it got. mypy sees a redefinition and cannot see the
+    # branch.
+    class Settings:  # type: ignore[no-redef]
         """
         Basic settings for core library usage.
-        For full configuration support, install with: pip install promethium-
-        seismic[server]
+        For environment and .env support, install pydantic-settings.
         """
 
         def __init__(self):

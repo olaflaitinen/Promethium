@@ -1,14 +1,20 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
-"""
-Promethium ML Module Tests
+"""Tests for the model architectures and training utilities.
 
-Tests for machine learning models and training utilities.
+Everything here needs the ml extra. When it is absent the whole module skips
+rather than failing collection, so a contributor working on the core install
+still gets a green run and a clear reason for what did not execute.
 """
 
 import numpy as np
-import torch
+import pytest
+
+torch = pytest.importorskip(
+    "torch",
+    reason="these tests need the ml extra: pip install 'promethium-seismic[ml]'",
+)
 
 
 def test_unet_import():

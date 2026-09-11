@@ -1,31 +1,30 @@
-# Promethium - Advanced Seismic Data Recovery and Reconstruction Framework
-
-**A state-of-the-art, high-performance, AI-driven framework for seismic signal reconstruction, denoising, and geophysical data enhancement. Developed in December 2025 with cutting-edge deep learning architectures and production-grade engineering practices.**
-
----
-
-[![Build Status](https://img.shields.io/github/actions/workflow/status/olaflaitinen/promethium/ci.yml?branch=main&style=flat-square&logo=github&label=Build)](https://github.com/olaflaitinen/promethium/actions)
-[![Test Coverage](https://img.shields.io/codecov/c/github/olaflaitinen/promethium?style=flat-square&logo=codecov&label=Coverage)](https://codecov.io/gh/olaflaitinen/promethium)
-[![License: MPL 2.0](https://img.shields.io/badge/License-MPL%202.0-brightgreen.svg?style=flat-square)](LICENSE)
-[![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12-blue?style=flat-square&logo=python)](https://www.python.org/)
-[![Angular](https://img.shields.io/badge/Angular-17+-dd0031?style=flat-square&logo=angular)](https://angular.io/)
-[![Node.js](https://img.shields.io/badge/Node.js-20+-339933?style=flat-square&logo=node.js)](https://nodejs.org/)
-[![Docker](https://img.shields.io/badge/Docker-Available-2496ED?style=flat-square&logo=docker)](https://www.docker.com/)
-[![Documentation](https://img.shields.io/badge/Docs-Latest-green?style=flat-square)](docs/)
-[![Code Style: Black](https://img.shields.io/badge/Code%20Style-Black-000000?style=flat-square)](https://github.com/psf/black)
-[![Linting: Ruff](https://img.shields.io/badge/Linting-Ruff-D7FF64?style=flat-square)](https://github.com/astral-sh/ruff)
-[![ESLint](https://img.shields.io/badge/ESLint-Configured-4B32C3?style=flat-square&logo=eslint)](https://eslint.org/)
-[![Maintenance](https://img.shields.io/badge/Maintained-Yes-green?style=flat-square)](https://github.com/olaflaitinen/promethium/commits/main)
-[![Non-Commercial](https://img.shields.io/badge/Use-Non--Commercial-orange?style=flat-square)](#license-and-non-commercial-use)
-
----
-
 <p align="center">
-  <img src="assets/branding/promethium-logo.png" alt="Promethium Logo - A dark, rounded waveform symbolizing signal continuity and reconstruction" width="320"/>
+  <picture>
+    <source media="(prefers-color-scheme: dark)"
+            srcset="assets/logo/promethium-wordmark-paper.svg">
+    <img src="assets/logo/promethium-wordmark-ink.svg"
+         alt="Promethium" width="420">
+  </picture>
 </p>
 
 <p align="center">
-  <em>Promethium: Illuminating hidden signals within seismic noise.</em>
+  <strong>Reconstruction, denoising and quality scoring for seismic data,
+  as a Python library.</strong>
+</p>
+
+<p align="center">
+  <a href="https://github.com/olaflaitinen/Promethium/actions/workflows/python.yml"><img
+    src="https://github.com/olaflaitinen/Promethium/actions/workflows/python.yml/badge.svg?branch=main"
+    alt="Python CI status"></a>
+  <a href="LICENSE"><img
+    src="https://img.shields.io/badge/License-MPL%202.0-brightgreen.svg?style=flat-square"
+    alt="Licence MPL-2.0"></a>
+  <a href="https://www.python.org/"><img
+    src="https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12-blue?style=flat-square&logo=python"
+    alt="Python 3.10, 3.11 and 3.12"></a>
+  <a href="#installation"><img
+    src="https://img.shields.io/badge/core%20install-numpy%20%2B%20scipy-informational?style=flat-square"
+    alt="Core install needs numpy and scipy only"></a>
 </p>
 
 ---

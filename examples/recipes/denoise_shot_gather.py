@@ -38,11 +38,11 @@ def main():
     args = parser.parse_args()
     
     # Import Promethium components
-    from promethium import SeismicDataset
-    from promethium.io.readers import load_seismic_data
-    from promethium.io.writers import save_seismic_data
-    from promethium.pipelines.recovery import SeismicRecoveryPipeline
-    from promethium.evaluation.metrics import signal_to_noise_ratio, mean_squared_error
+    from promethium_seismic import SeismicDataset
+    from promethium_seismic.io.readers import load_seismic_data
+    from promethium_seismic.io.writers import save_seismic_data
+    from promethium_seismic.pipelines.recovery import SeismicRecoveryPipeline
+    from promethium_seismic.evaluation.metrics import signal_to_noise_ratio, mean_squared_error
     
     print(f"Promethium Seismic Denoising")
     print(f"Input: {args.input}")

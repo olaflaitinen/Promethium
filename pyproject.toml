@@ -113,7 +113,7 @@ all = [
 ]
 
 [project.scripts]
-promethium = "promethium.cli:main"
+promethium-seismic = "promethium_seismic.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/olaflaitinen/Promethium"
@@ -127,7 +127,7 @@ package-dir = {"" = "src"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["promethium*"]
+include = ["promethium_seismic*"]
 
 [tool.setuptools.package-data]
 promethium = ["py.typed"]

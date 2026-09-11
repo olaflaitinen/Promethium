@@ -49,9 +49,9 @@ def run_single_pipeline(
     Returns:
         Dictionary with run results and metrics.
     """
-    from promethium.io.readers import load_seismic_data
-    from promethium.pipelines.recovery import SeismicRecoveryPipeline
-    from promethium.evaluation.metrics import (
+    from promethium_seismic.io.readers import load_seismic_data
+    from promethium_seismic.pipelines.recovery import SeismicRecoveryPipeline
+    from promethium_seismic.evaluation.metrics import (
         signal_to_noise_ratio,
         mean_squared_error,
         structural_similarity_index,

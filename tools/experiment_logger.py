@@ -8,7 +8,7 @@ Lightweight experiment tracking for seismic data recovery pipelines.
 Logs run metadata, parameters, and metrics to JSON-lines files.
 
 Usage:
-    from promethium.tools.experiment_logger import ExperimentLogger
+    from promethium_seismic.tools.experiment_logger import ExperimentLogger
     
     logger = ExperimentLogger("my_experiment")
     run_id = logger.start_run(pipeline="unet", dataset="synthetic")

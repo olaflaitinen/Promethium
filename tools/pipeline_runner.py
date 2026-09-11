@@ -8,7 +8,7 @@ Configuration-driven pipeline execution for seismic data recovery.
 Parses YAML configs, builds pipelines, and executes with logging.
 
 Usage:
-    from promethium.tools.pipeline_runner import run_pipeline_from_config
+    from promethium_seismic.tools.pipeline_runner import run_pipeline_from_config
     
     result = run_pipeline_from_config("configs/pipelines/unet_denoising.yaml")
 """
@@ -53,7 +53,7 @@ def build_pipeline(config: Dict[str, Any]):
     Returns:
         Configured pipeline object.
     """
-    from promethium.pipelines.recovery import SeismicRecoveryPipeline
+    from promethium_seismic.pipelines.recovery import SeismicRecoveryPipeline
     
     pipeline_name = config["pipeline"]["name"]
     pipeline_type = config["pipeline"].get("type", "classical")
@@ -81,7 +81,7 @@ def load_data(config: Dict[str, Any]):
     Returns:
         SeismicDataset object.
     """
-    from promethium.io.readers import load_seismic_data
+    from promethium_seismic.io.readers import load_seismic_data
     
     input_config = config["input"]
     input_path = input_config["path"]
@@ -106,7 +106,7 @@ def run_evaluation(
         Dictionary of metric names to values.
     """
     import numpy as np
-    from promethium.evaluation.metrics import (
+    from promethium_seismic.evaluation.metrics import (
         signal_to_noise_ratio,
         mean_squared_error,
         peak_signal_to_noise_ratio,
@@ -167,7 +167,7 @@ def save_results(
     """
     import json
     import numpy as np
-    from promethium.io.writers import save_seismic_data
+    from promethium_seismic.io.writers import save_seismic_data
     
     output_config = config["output"]
     output_dir = Path(output_config["path"])
@@ -229,7 +229,7 @@ def run_pipeline_from_config(
     # Setup experiment logging
     logger = None
     if experiment_id or config.get("logging", {}).get("experiment_id"):
-        from promethium.tools.experiment_logger import ExperimentLogger
+        from promethium_seismic.tools.experiment_logger import ExperimentLogger
         exp_id = experiment_id or config["logging"]["experiment_id"]
         logger = ExperimentLogger(exp_id)
         logger.start_run(

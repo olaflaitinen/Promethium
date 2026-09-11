@@ -23,9 +23,9 @@ import numpy as np
 
 def run_inference(args):
     """Run U-Net inference on input data."""
-    from promethium.io.readers import load_seismic_data
-    from promethium.io.writers import save_seismic_data
-    from promethium.ml import load_model, reconstruct
+    from promethium_seismic.io.readers import load_seismic_data
+    from promethium_seismic.io.writers import save_seismic_data
+    from promethium_seismic.ml import load_model, reconstruct
     
     print("U-Net Inference Mode")
     print("-" * 40)
@@ -50,8 +50,8 @@ def run_inference(args):
 
 def run_training(args):
     """Train U-Net model from scratch."""
-    from promethium.ml.data import SeismicDataLoader
-    from promethium.ml.models import UNetDenoiser
+    from promethium_seismic.ml.data import SeismicDataLoader
+    from promethium_seismic.ml.models import UNetDenoiser
     
     print("U-Net Training Mode")
     print("-" * 40)

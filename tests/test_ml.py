@@ -14,13 +14,13 @@ import numpy as np
 
 def test_unet_import():
     """Test that UNet model can be imported."""
-    from promethium.ml.models import UNet
+    from promethium_seismic.ml.models import UNet
     assert UNet is not None
 
 
 def test_unet_forward_pass():
     """Test UNet forward pass with sample input."""
-    from promethium.ml.models import UNet
+    from promethium_seismic.ml.models import UNet
     
     model = UNet(n_channels=1, n_classes=1)
     model.eval()
@@ -36,7 +36,7 @@ def test_unet_forward_pass():
 
 def test_unet_trainable():
     """Test that UNet has trainable parameters."""
-    from promethium.ml.models import UNet
+    from promethium_seismic.ml.models import UNet
     
     model = UNet(n_channels=1, n_classes=1)
     

@@ -8,7 +8,7 @@ Utility for downloading and managing datasets from the Promethium registry.
 Provides functions for listing, downloading, and verifying dataset integrity.
 
 Usage:
-    from promethium.tools.dataset_downloader import DatasetManager
+    from promethium_seismic.tools.dataset_downloader import DatasetManager
     
     manager = DatasetManager()
     manager.list_datasets()
@@ -38,10 +38,10 @@ class DatasetManager:
         
         Args:
             registry_path: Path to the registry YAML file. Defaults to built-in registry.
-            cache_dir: Directory for caching downloads. Defaults to .promethium/cache.
+            cache_dir: Directory for caching downloads. Defaults to .promethium_seismic/cache.
         """
         self.registry_path = registry_path or self.REGISTRY_PATH
-        self.cache_dir = cache_dir or Path.home() / ".promethium" / "cache"
+        self.cache_dir = cache_dir or Path.home() / ".promethium_seismic" / "cache"
         self.cache_dir.mkdir(parents=True, exist_ok=True)
         
         self._registry: Optional[Dict] = None

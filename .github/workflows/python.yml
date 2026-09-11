@@ -4,7 +4,7 @@ on:
   push:
     branches: [main, develop]
     paths:
-      - 'src/promethium/**'
+      - 'src/promethium_seismic/**'
       - 'tests/**'
       - 'pyproject.toml'
   pull_request:
@@ -33,17 +33,17 @@ jobs:
     - name: Lint with ruff
       run: |
         pip install ruff
-        ruff check src/promethium
+        ruff check src/promethium_seismic
     
     - name: Type check with mypy
       run: |
         pip install mypy
-        mypy src/promethium --ignore-missing-imports
+        mypy src/promethium_seismic --ignore-missing-imports
       continue-on-error: true
     
     - name: Test with pytest
       run: |
-        pytest tests/ -v --cov=promethium --cov-report=xml
+        pytest tests/ -v --cov=promethium_seismic --cov-report=xml
     
     - name: Upload coverage
       uses: codecov/codecov-action@v3

@@ -70,7 +70,7 @@ def test_sqlalchemy_available():
 def test_config_module_exists():
     """Test that core config module can be imported."""
     try:
-        from promethium.core import config
+        from promethium_seismic.core import config
         assert True
     except ImportError:
         pytest.skip("Core config module not yet implemented")
@@ -79,7 +79,7 @@ def test_config_module_exists():
 def test_logging_module_exists():
     """Test that core logging module can be imported."""
     try:
-        from promethium.core import logging
+        from promethium_seismic.core import logging
         assert True
     except ImportError:
         pytest.skip("Core logging module not yet implemented")

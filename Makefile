@@ -51,7 +51,7 @@ install-all:
 
 # Testing
 test:
-	pytest tests/ -v --cov=promethium --cov-report=term-missing
+	pytest tests/ -v --cov=promethium_seismic --cov-report=term-missing
 
 test-fast:
 	pytest tests/ -v --ignore=tests/integration
@@ -59,7 +59,7 @@ test-fast:
 # Linting and formatting
 lint:
 	ruff check src/
-	mypy src/promethium --ignore-missing-imports
+	mypy src/promethium_seismic --ignore-missing-imports
 
 format:
 	black src/ tests/ examples/ tools/
@@ -86,9 +86,9 @@ run-example:
 	python examples/recipes/denoise_shot_gather.py testdata/sample.npy results/output.npy --method wiener --verbose
 
 run-cli-example:
-	promethium version
-	promethium models
-	promethium datasets
+	promethium_seismic version
+	promethium_seismic models
+	promethium_seismic datasets
 
 # Benchmarking
 benchmark:
@@ -99,14 +99,14 @@ benchmark-quick:
 
 # Server
 serve:
-	uvicorn promethium.api.main:app --host 0.0.0.0 --port 8000
+	uvicorn promethium_seismic.api.main:app --host 0.0.0.0 --port 8000
 
 serve-dev:
-	uvicorn promethium.api.main:app --reload --host 0.0.0.0 --port 8000
+	uvicorn promethium_seismic.api.main:app --reload --host 0.0.0.0 --port 8000
 
 # Docker
 docker-build:
-	docker build -t promethium:latest -f docker/Dockerfile.app .
+	docker build -t promethium_seismic:latest -f docker/Dockerfile.app .
 
 docker-run:
 	docker-compose -f docker/docker-compose.yml up
@@ -123,7 +123,7 @@ publish:
 
 # Development helpers
 experiment-list:
-	promethium experiments list
+	promethium_seismic experiments list
 
 datasets-list:
-	promethium datasets list
+	promethium_seismic datasets list

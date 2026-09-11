@@ -34,7 +34,7 @@ def generate_api_docs(output_dir: Path) -> None:
         sys.executable, "-m", "pdoc",
         "--output-dir", str(api_docs_dir),
         "--html",
-        "promethium"
+        "promethium_seismic"
     ], check=True)
     
     print("API documentation generated successfully")

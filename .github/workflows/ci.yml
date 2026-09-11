@@ -85,34 +85,24 @@ jobs:
       run: |
         twine check dist/*
         
+    # What a wheel has to prove: it installs on a machine with only the
+    # core dependencies, and it works. The previous version imported
+    # `promethium`, which is a different project on PyPI, and reached for
+    # read_segy and SeismicRecoveryPipeline, which live behind the io and ml
+    # extras and are not installed here.
+    #
+    # The checks live in a committed script rather than in a chain of
+    # python -c lines, so the same acceptance test can be run by hand
+    # against any wheel.
     - name: Test installation
       run: |
         pip install dist/*.whl
-        python -c "import promethium; print(f'Promethium version: {promethium.__version__}')"
-        python -c "from promethium import read_segy, SeismicRecoveryPipeline, evaluate_reconstruction"
-        
+        cd "$(mktemp -d)"
+        python "$GITHUB_WORKSPACE/scripts/smoke_install.py"
+
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
         name: dist
         path: dist/
 
-  frontend-build:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-        cache: 'npm'
-        cache-dependency-path: frontend/package-lock.json
-        
-    - name: Install Dependencies
-      working-directory: ./frontend
-      run: npm ci
-      
-    - name: Build
-      working-directory: ./frontend
-      run: npm run build

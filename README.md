@@ -6,7 +6,7 @@
 
 [![Build Status](https://img.shields.io/github/actions/workflow/status/olaflaitinen/promethium/ci.yml?branch=main&style=flat-square&logo=github&label=Build)](https://github.com/olaflaitinen/promethium/actions)
 [![Test Coverage](https://img.shields.io/codecov/c/github/olaflaitinen/promethium?style=flat-square&logo=codecov&label=Coverage)](https://codecov.io/gh/olaflaitinen/promethium)
-[![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey.svg?style=flat-square)](LICENSE)
+[![License: MPL 2.0](https://img.shields.io/badge/License-MPL%202.0-brightgreen.svg?style=flat-square)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12-blue?style=flat-square&logo=python)](https://www.python.org/)
 [![Angular](https://img.shields.io/badge/Angular-17+-dd0031?style=flat-square&logo=angular)](https://angular.io/)
 [![Node.js](https://img.shields.io/badge/Node.js-20+-339933?style=flat-square&logo=node.js)](https://nodejs.org/)
@@ -865,7 +865,7 @@ Before contributing, please review:
 
 ## License and Non-Commercial Use
 
-Promethium is licensed under the **Creative Commons Attribution-NonCommercial 4.0 International License (CC BY-NC 4.0)**.
+Promethium is licensed under the **Mozilla Public License 2.0 (MPL-2.0)**.
 
 This license permits:
 - Sharing and adapting the material for non-commercial purposes

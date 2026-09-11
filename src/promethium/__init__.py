@@ -1,3 +1,6 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # Promethium - Advanced Seismic Data Recovery and Reconstruction Framework
 # Main package initialization
 
@@ -28,12 +31,12 @@ Quick Start:
     >>> print(metrics)
 
 Copyright (c) 2025 Olaf Yunus Laitinen Imanov
-Licensed under CC BY-NC 4.0
+Licensed under MPL-2.0
 """
 
 __version__ = "1.0.4"
 __author__ = "Olaf Yunus Laitinen Imanov"
-__license__ = "CC BY-NC 4.0"
+__license__ = "MPL-2.0"
 
 # -----------------------------------------------------------------------------
 # Core utilities

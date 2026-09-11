@@ -8,7 +8,7 @@ version = "1.0.4"
 description = "Promethium - Advanced Seismic Data Recovery and Reconstruction Framework. State-of-the-art AI-driven framework for seismic signal reconstruction, denoising, and geophysical data enhancement."
 authors = [{name = "Olaf Yunus Laitinen Imanov", email = "contact@promethium.dev"}]
 readme = "README.md"
-license = {text = "CC-BY-NC-4.0"}
+license = "MPL-2.0"
 requires-python = ">=3.10"
 keywords = [
     "seismic",
@@ -34,7 +34,6 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
-    "License :: Other/Proprietary License",
     "Operating System :: OS Independent",
     "Typing :: Typed",
 ]

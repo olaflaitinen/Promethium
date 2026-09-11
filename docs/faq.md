@@ -18,7 +18,7 @@ Promethium is an open-source framework for seismic data recovery and reconstruct
 
 ### What license is Promethium under?
 
-Promethium is licensed under CC BY-NC 4.0 (Creative Commons Attribution-NonCommercial 4.0). Commercial use requires a separate license.
+Promethium is licensed under MPL-2.0 (Mozilla Public License 2.0). Commercial use is permitted and needs no separate licence. MPL is file level copyleft: if you modify Promethium's own source files and distribute the result, those files stay under MPL-2.0, while the rest of your application remains under whatever terms you choose.
 
 ---
 

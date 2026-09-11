@@ -336,7 +336,7 @@ When requesting features, include:
 
 ## Licensing
 
-By contributing to Promethium, you agree that your contributions will be licensed under the same license as the project: **Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)**.
+By contributing to Promethium, you agree that your contributions will be licensed under the same license as the project: **Mozilla Public License 2.0 (MPL-2.0)**.
 
 You certify that you have the right to submit the contribution under this license.
 

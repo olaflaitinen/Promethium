@@ -115,7 +115,7 @@ Feature requests with clear use cases and community support are prioritized.
 
 ### Commercial Licensing
 
-For commercial use of Promethium beyond the CC BY-NC 4.0 license terms, contact the maintainers to discuss commercial licensing options.
+Commercial use is permitted. MPL-2.0 places no restriction on using Promethium in a commercial product, and no separate licence is needed. What it does require is that changes to Promethium's own files are published under MPL-2.0.
 
 ### Consulting and Custom Development
 

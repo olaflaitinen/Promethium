@@ -1,9 +1,12 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
-import torch
 import numpy as np
 from typing import Dict, Any, Callable, List
+
+# torch is imported inside ToTensor rather than here. It is needed by one
+# class out of five, and importing it at module load would put a two and a
+# half gigabyte dependency on the path of anyone calling a bandpass filter.
 
 class SeismicTransform:
     """Base class for seismic data augmentations."""
@@ -21,8 +24,22 @@ class Compose:
         return sample
 
 class ToTensor(SeismicTransform):
-    """Convert numpy arrays to PyTorch tensors."""
+    """Convert numpy arrays to PyTorch tensors.
+
+    Raises:
+        ImportError: if torch is not installed. This is the only transform
+            that needs it, and the message names the extra that provides it.
+    """
+
     def __call__(self, sample: Dict[str, Any]) -> Dict[str, Any]:
+        try:
+            import torch
+        except ImportError as exc:
+            raise ImportError(
+                "ToTensor needs PyTorch, which is not installed. Install it "
+                "with:\n\n    pip install 'promethium-seismic[ml]'"
+            ) from exc
+
         for key in ["input", "target"]:
             if key in sample and isinstance(sample[key], np.ndarray):
                 # Ensure float32 for training

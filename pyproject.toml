@@ -38,25 +38,55 @@ classifiers = [
     "Typing :: Typed",
 ]
 
-# Core dependencies - lightweight for library usage
+# Core dependencies.
+#
+# What it takes to load seismic arrays, filter them, reconstruct missing
+# traces and score the result. Nothing here is larger than a few megabytes,
+# so `pip install promethium-seismic` is a quick install on a laptop or in a
+# slim container.
+#
+# Everything that is heavy or optional is an extra below, and the package
+# tells you which one you need at the point you need it rather than failing
+# at import with a name you have never heard of.
 dependencies = [
     "numpy>=1.24",
     "scipy>=1.10",
-    "pandas>=2.0",
-    "xarray>=2023.0",
-    "obspy>=1.4.0",
-    "segyio>=1.9.0",
-    "torch>=2.0.0",
-    "scikit-learn>=1.2.0",
-    "pyyaml>=6.0",
-    "tqdm>=4.65.0",
-    "zarr>=2.12.0",
     "PyWavelets>=1.4.0",
-    "requests>=2.25.0",
+    "pyyaml>=6.0",
 ]
 
 [project.optional-dependencies]
-# Server dependencies for backend deployment
+# Seismic file formats and the wider array stack. segyio and obspy are the
+# two standard readers; zarr and xarray back the chunked array store.
+io = [
+    "segyio>=1.9.0",
+    "obspy>=1.4.0",
+    "xarray>=2023.0",
+    "zarr>=2.12.0",
+    "pandas>=2.0",
+]
+
+# Deep learning. This is the two and a half gigabytes, and it is optional
+# because the classical reconstruction methods do not need it.
+ml = [
+    "torch>=2.0.0",
+    "scikit-learn>=1.2.0",
+    "tqdm>=4.65.0",
+]
+
+# Plotting.
+viz = [
+    "matplotlib>=3.7.0",
+    "seaborn>=0.12.0",
+]
+
+# The command line interface.
+cli = [
+    "typer>=0.9.0",
+    "rich>=13.0.0",
+]
+
+# The HTTP API and its storage layer.
 server = [
     "fastapi>=0.110.0",
     "uvicorn[standard]>=0.22.0",
@@ -65,13 +95,26 @@ server = [
     "sqlalchemy>=2.0",
     "aiosqlite>=0.19.0",
     "asyncpg>=0.29.0",
-    "celery>=5.3.0",
-    "redis>=4.6.0",
     "python-multipart>=0.0.6",
-    "typer>=0.9.0",
+    "passlib[bcrypt]>=1.7.4",
+    "python-jose[cryptography]>=3.3.0",
+    "psutil>=5.9.0",
+    "requests>=2.25.0",
 ]
 
-# Development dependencies
+# Distributed job execution.
+workflows = [
+    "celery>=5.3.0",
+    "redis>=4.6.0",
+]
+
+# Object storage backends.
+cloud = [
+    "boto3>=1.28.0",
+    "azure-storage-blob>=12.17.0",
+]
+
+# Development and testing.
 dev = [
     "pytest>=7.0",
     "pytest-cov>=4.0",
@@ -81,23 +124,14 @@ dev = [
     "httpx>=0.24.0",
     "build>=1.0.4",
     "twine>=4.0.0",
+    "scikit-image>=0.22.0",
 ]
 
-# Visualization dependencies
-viz = [
-    "matplotlib>=3.7.0",
-    "seaborn>=0.12.0",
-]
-
-# Full installation with all optional dependencies
+# Everything a user might want, which is not the same as everything a
+# developer needs. The name is the distribution name, not the import name:
+# the old table said promethium[...] and resolved to a different project.
 all = [
-    "promethium[server,dev,viz,cli]",
-]
-
-# CLI dependencies
-cli = [
-    "typer>=0.9.0",
-    "rich>=13.0.0",
+    "promethium-seismic[io,ml,viz,cli,server,workflows,cloud]",
 ]
 
 [project.scripts]

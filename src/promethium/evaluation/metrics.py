@@ -9,28 +9,35 @@ All functions accept numpy arrays or PyTorch tensors as input.
 """
 
 import numpy as np
-import torch
-import torch.nn.functional as F
-from typing import Union, Dict, Any, Optional
+from typing import Any, Dict, Optional, Union
 from scipy import signal as scipy_signal
 from scipy.fft import fft, fftfreq
+from scipy.ndimage import uniform_filter
 
 
-ArrayLike = Union[np.ndarray, torch.Tensor]
+# A torch.Tensor is accepted wherever an array is, but torch is deliberately
+# not imported to say so. Every metric here is numpy arithmetic, and naming
+# the type in an annotation would make the whole module depend on a two and a
+# half gigabyte package for documentation.
+ArrayLike = Union[np.ndarray, Any]
 
 
 def _to_numpy(arr: ArrayLike) -> np.ndarray:
-    """Convert input to numpy array."""
-    if isinstance(arr, torch.Tensor):
+    """Convert any array like input to a numpy array.
+
+    Args:
+        arr: A numpy array, a torch tensor, or anything numpy can take.
+
+    Returns:
+        The data as a numpy array, detached from any autograd graph and
+        moved off the device if it was on one.
+
+    Torch tensors are recognised by their interface rather than by their
+    type, so this works whether or not torch is installed.
+    """
+    if hasattr(arr, "detach") and hasattr(arr, "cpu"):
         return arr.detach().cpu().numpy()
     return np.asarray(arr)
-
-
-def _to_tensor(arr: ArrayLike) -> torch.Tensor:
-    """Convert input to PyTorch tensor."""
-    if isinstance(arr, np.ndarray):
-        return torch.from_numpy(arr).float()
-    return arr.float()
 
 
 def signal_to_noise_ratio(
@@ -158,45 +165,70 @@ def structural_similarity_index(
         >>> ssim = structural_similarity_index(clean_data, reconstructed_data)
         >>> print(f"SSIM: {ssim:.4f}")
     """
-    original = _to_tensor(original)
-    reconstructed = _to_tensor(reconstructed)
-    
-    # Ensure 4D tensor (B, C, H, W)
-    while original.ndim < 4:
-        original = original.unsqueeze(0)
-    while reconstructed.ndim < 4:
-        reconstructed = reconstructed.unsqueeze(0)
-        
+    original = _to_numpy(original).astype(np.float64)
+    reconstructed = _to_numpy(reconstructed).astype(np.float64)
+
+    if original.shape != reconstructed.shape:
+        raise ValueError(
+            f"shape mismatch: original is {original.shape} and "
+            f"reconstructed is {reconstructed.shape}"
+        )
+
+    # Collapse any leading singleton axes so that a (1, 1, H, W) tensor and an
+    # (H, W) array are treated the same way.
+    original = np.squeeze(original)
+    reconstructed = np.squeeze(reconstructed)
+
     if data_range is None:
-        data_range = float(torch.max(original) - torch.min(original))
-        
-    # SSIM constants
+        data_range = float(original.max() - original.min())
+    if data_range == 0.0:
+        # A constant reference. The images are either identical or not, and
+        # the ratio below is undefined, so answer the question directly.
+        return 1.0 if np.array_equal(original, reconstructed) else 0.0
+
     C1 = (0.01 * data_range) ** 2
     C2 = (0.03 * data_range) ** 2
-    
-    # Use average pooling to compute local means
-    kernel_size = min(win_size, original.shape[-1], original.shape[-2])
-    if kernel_size < 3:
-        kernel_size = 3
-        
-    padding = kernel_size // 2
-    
-    mu_x = F.avg_pool2d(reconstructed, kernel_size, stride=1, padding=padding)
-    mu_y = F.avg_pool2d(original, kernel_size, stride=1, padding=padding)
-    
-    mu_x_sq = mu_x ** 2
-    mu_y_sq = mu_y ** 2
+
+    # The window must fit inside the data and must be odd, so that the
+    # invalid border is the same width on both sides.
+    kernel_size = int(min(win_size, *original.shape))
+    if kernel_size % 2 == 0:
+        kernel_size -= 1
+    kernel_size = max(kernel_size, 3)
+
+    filter_args = {"size": kernel_size, "mode": "reflect"}
+
+    mu_x = uniform_filter(reconstructed, **filter_args)
+    mu_y = uniform_filter(original, **filter_args)
+
+    mu_x_sq = mu_x * mu_x
+    mu_y_sq = mu_y * mu_y
     mu_xy = mu_x * mu_y
-    
-    sigma_x_sq = F.avg_pool2d(reconstructed ** 2, kernel_size, stride=1, padding=padding) - mu_x_sq
-    sigma_y_sq = F.avg_pool2d(original ** 2, kernel_size, stride=1, padding=padding) - mu_y_sq
-    sigma_xy = F.avg_pool2d(reconstructed * original, kernel_size, stride=1, padding=padding) - mu_xy
-    
+
+    # The unbiased sample covariance, which is what the reference
+    # implementations use. Without the correction the variance terms are low
+    # by a factor of (n - 1) / n and SSIM reads slightly high.
+    count = kernel_size ** original.ndim
+    bias = count / (count - 1)
+
+    sigma_x_sq = bias * (uniform_filter(reconstructed * reconstructed, **filter_args) - mu_x_sq)
+    sigma_y_sq = bias * (uniform_filter(original * original, **filter_args) - mu_y_sq)
+    sigma_xy = bias * (uniform_filter(reconstructed * original, **filter_args) - mu_xy)
+
     ssim_map = ((2 * mu_xy + C1) * (2 * sigma_xy + C2)) / (
         (mu_x_sq + mu_y_sq + C1) * (sigma_x_sq + sigma_y_sq + C2)
     )
-    
-    return float(ssim_map.mean().item())
+
+    # Crop the border where the window ran off the edge. The previous
+    # implementation zero padded instead, which computes the local mean near
+    # the edge as though the data continued as silence and biases the score
+    # downwards on any gather with live amplitudes at its boundary.
+    pad = (kernel_size - 1) // 2
+    if pad > 0 and all(dim > 2 * pad for dim in ssim_map.shape):
+        interior = tuple(slice(pad, -pad) for _ in ssim_map.shape)
+        ssim_map = ssim_map[interior]
+
+    return float(ssim_map.mean())
 
 
 def frequency_domain_correlation(

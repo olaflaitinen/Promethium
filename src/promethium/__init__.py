@@ -39,18 +39,119 @@ __author__ = "Olaf Yunus Laitinen Imanov"
 __license__ = "MPL-2.0"
 
 # -----------------------------------------------------------------------------
-# Core utilities
+# Eager imports: the light core
+#
+# Only what depends on nothing heavier than the standard library is imported
+# at module load. Everything else is deferred below, so that
+# `import promethium` costs a few milliseconds and works in an environment
+# that has numpy and scipy and nothing else.
 # -----------------------------------------------------------------------------
 from promethium.core.config import settings, get_settings
 from promethium.core.logging import get_logger
 
-# -----------------------------------------------------------------------------
-# I/O functions - reading and writing seismic data formats
-# -----------------------------------------------------------------------------
-from promethium.io import read_segy, write_segy
 
-# Aliases for consistency with common naming conventions
-load_segy = read_segy
+# -----------------------------------------------------------------------------
+# Lazy imports
+#
+# Each public name is mapped to the submodule that defines it and to the
+# optional dependency group that submodule needs. Resolution happens on first
+# attribute access, through the module __getattr__ that PEP 562 defines.
+#
+# The point of the extra name in this table is the error message. Without it a
+# user who calls read_segy without the io extra gets ModuleNotFoundError for
+# segyio, which tells them nothing about what to do. With it they get told
+# which extra to install.
+# -----------------------------------------------------------------------------
+_LAZY: dict[str, tuple[str, str | None]] = {
+    # name: (submodule, extra required, or None when the core is enough)
+    "read_segy": ("promethium.io", "io"),
+    "write_segy": ("promethium.io", "io"),
+    "load_segy": ("promethium.io", "io"),
+    "bandpass_filter": ("promethium.signal", None),
+    "lowpass_filter": ("promethium.signal", None),
+    "highpass_filter": ("promethium.signal", None),
+    "notch_filter": ("promethium.signal", None),
+    "InferenceEngine": ("promethium.ml", "ml"),
+    "load_model": ("promethium.ml", "ml"),
+    "reconstruct": ("promethium.ml", "ml"),
+    "compute_snr": ("promethium.ml", "ml"),
+    "compute_ssim": ("promethium.ml", "ml"),
+    "SeismicRecoveryPipeline": ("promethium.pipelines", "ml"),
+    "signal_to_noise_ratio": ("promethium.evaluation", None),
+    "mean_squared_error": ("promethium.evaluation", None),
+    "peak_signal_to_noise_ratio": ("promethium.evaluation", None),
+    "structural_similarity_index": ("promethium.evaluation", None),
+    "frequency_domain_correlation": ("promethium.evaluation", None),
+    "phase_coherence": ("promethium.evaluation", None),
+    "set_seed": ("promethium.utils.reproducibility", "ml"),
+    "get_device": ("promethium.utils.reproducibility", "ml"),
+    "generate_synthetic_traces": ("promethium.utils.synthetic", None),
+    "add_noise": ("promethium.utils.synthetic", None),
+    "plot_traces": ("promethium.utils.visualization", "viz"),
+    "plot_comparison": ("promethium.utils.visualization", "viz"),
+}
+
+
+class MissingDependencyError(ImportError):
+    """Raised when a feature is used without the extra that provides it."""
+
+
+def _missing(name: str, extra: str, cause: BaseException) -> MissingDependencyError:
+    """Build the error a user can act on.
+
+    Args:
+        name: The attribute that was requested.
+        extra: The optional dependency group that provides it.
+        cause: The original import failure.
+
+    Returns:
+        An error naming the install command.
+    """
+    return MissingDependencyError(
+        f"promethium.{name} needs the '{extra}' extra, which is not "
+        f"installed. Install it with:\n\n"
+        f"    pip install 'promethium-seismic[{extra}]'\n\n"
+        f"The underlying import failed with: {cause}"
+    )
+
+
+def __getattr__(name: str):
+    """Resolve a public name on first use.
+
+    Args:
+        name: The attribute being looked up.
+
+    Returns:
+        The object from the submodule that defines it.
+
+    Raises:
+        MissingDependencyError: when the submodule needs an extra that is not
+            installed.
+        AttributeError: when the name is not part of the public surface.
+    """
+    entry = _LAZY.get(name)
+    if entry is None:
+        raise AttributeError(f"module 'promethium' has no attribute '{name}'")
+
+    module_name, extra = entry
+    import importlib
+
+    try:
+        module = importlib.import_module(module_name)
+    except ImportError as exc:
+        if extra is None:
+            raise
+        raise _missing(name, extra, exc) from exc
+
+    value = getattr(module, name)
+    globals()[name] = value  # cache, so this runs once per name
+    return value
+
+
+def __dir__() -> list[str]:
+    """List the public surface, including names not yet imported."""
+    return sorted(set(globals()) | set(_LAZY))
+
 
 
 def load_miniseed(path: str, **kwargs):
@@ -125,28 +226,6 @@ def load_sac(path: str, **kwargs):
     )
 
 
-# -----------------------------------------------------------------------------
-# Signal processing utilities
-# -----------------------------------------------------------------------------
-from promethium.signal import (
-    bandpass_filter,
-    lowpass_filter,
-    highpass_filter,
-    notch_filter,
-)
-
-# -----------------------------------------------------------------------------
-# ML components
-# -----------------------------------------------------------------------------
-from promethium.ml import (
-    InferenceEngine,
-    load_model,
-    reconstruct,
-    compute_snr,
-    compute_ssim,
-)
-
-
 def get_model(name: str, *, device: str = None):
     """
     Get a pre-defined seismic reconstruction model by name.
@@ -179,12 +258,6 @@ def get_model(name: str, *, device: str = None):
     return model
 
 
-# -----------------------------------------------------------------------------
-# High-level pipelines
-# -----------------------------------------------------------------------------
-from promethium.pipelines import SeismicRecoveryPipeline
-
-
 def run_recovery(data, pipeline=None, preset: str = None, **kwargs):
     """
     Run seismic data recovery using a pipeline.
@@ -211,34 +284,6 @@ def run_recovery(data, pipeline=None, preset: str = None, **kwargs):
     return pipeline.run(data, **kwargs)
 
 
-# -----------------------------------------------------------------------------
-# Evaluation metrics
-# -----------------------------------------------------------------------------
-from promethium.evaluation import (
-    signal_to_noise_ratio,
-    mean_squared_error,
-    peak_signal_to_noise_ratio,
-    structural_similarity_index,
-    frequency_domain_correlation,
-    phase_coherence,
-    evaluate_reconstruction,
-)
-
-# -----------------------------------------------------------------------------
-# Utility functions
-# -----------------------------------------------------------------------------
-from promethium.utils import (
-    set_seed,
-    get_device,
-    generate_synthetic_traces,
-    add_noise,
-    plot_traces,
-    plot_comparison,
-)
-
-# -----------------------------------------------------------------------------
-# Public API
-# -----------------------------------------------------------------------------
 __all__ = [
     # Version info
     "__version__",

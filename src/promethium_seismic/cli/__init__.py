@@ -62,8 +62,8 @@ def run(
     - fista: Fast ISTA for compressive sensing reconstruction
     - unet: Deep learning U-Net for interpolation (requires GPU)
     """
-    from promethium_seismic.io.readers import load_seismic_data
-    from promethium_seismic.io.writers import save_seismic_data
+    from promethium_seismic.io import read as read_seismic
+    from promethium_seismic.io import write as write_seismic
     from promethium_seismic.pipelines.recovery import SeismicRecoveryPipeline
 
     console.print("[bold]Promethium Seismic Recovery[/bold]")
@@ -75,7 +75,7 @@ def run(
         console.print("Loading input data...")
 
     try:
-        dataset = load_seismic_data(str(input_path))
+        dataset = read_seismic(str(input_path))
     except Exception as e:
         console.print(f"[red]Error loading data: {e}[/red]")
         raise typer.Exit(code=1) from e
@@ -102,7 +102,7 @@ def run(
     result = pipe.run(dataset)
 
     # Save output
-    save_seismic_data(result, str(output_path))
+    write_seismic(str(output_path), result)
     console.print(f"[green]Output saved to: {output_path}[/green]")
 
 
@@ -237,8 +237,8 @@ def ingest(
     Converts to standardized internal representation for pipeline processing.
     """
 
-    from promethium_seismic.io.readers import load_seismic_data
-    from promethium_seismic.io.writers import save_seismic_data
+    from promethium_seismic.io import read as read_seismic
+    from promethium_seismic.io import write as write_seismic
 
     console.print("[bold]Promethium Data Ingestion[/bold]")
 
@@ -263,7 +263,7 @@ def ingest(
             console.print(f"Processing: {file_path.name}")
 
         try:
-            dataset = load_seismic_data(str(file_path))
+            dataset = read_seismic(str(file_path))
 
             if normalize:
                 # Normalize each trace
@@ -282,7 +282,7 @@ def ingest(
             else:
                 out_file = output_dir / f"{out_name}.h5"
 
-            save_seismic_data(dataset, str(out_file))
+            write_seismic(str(out_file), dataset)
             console.print(f"  [green]Saved: {out_file.name}[/green]")
 
         except Exception as e:

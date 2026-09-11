@@ -6,18 +6,18 @@ Reproducibility utilities for deterministic behavior.
 """
 
 import random
+
 import numpy as np
 import torch
-from typing import Optional
 
 
 def set_seed(seed: int = 42) -> None:
     """
     Set random seeds for reproducibility across all libraries.
-    
+
     Args:
         seed: Random seed value. Default is 42.
-        
+
     Example:
         >>> from promethium_seismic.utils import set_seed
         >>> set_seed(42)
@@ -35,13 +35,13 @@ def set_seed(seed: int = 42) -> None:
 def get_device(prefer_gpu: bool = True) -> str:
     """
     Determine the best available device for computation.
-    
+
     Args:
         prefer_gpu: If True, prefer CUDA if available. Default is True.
-        
+
     Returns:
         Device string: 'cuda' if GPU available and preferred, else 'cpu'.
-        
+
     Example:
         >>> from promethium_seismic.utils import get_device
         >>> device = get_device()

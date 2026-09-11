@@ -9,14 +9,14 @@ For server deployment (pip install promethium-seismic[server]), pydantic-setting
 provides full configuration from environment variables and .env files.
 """
 
-from typing import List
+import os
 from functools import lru_cache
 from pathlib import Path
-import os
 
 # Try to import pydantic_settings, fall back to simple dataclass if not available
 try:
     from pydantic_settings import BaseSettings, SettingsConfigDict
+
     PYDANTIC_SETTINGS_AVAILABLE = True
 except ImportError:
     PYDANTIC_SETTINGS_AVAILABLE = False
@@ -25,20 +25,22 @@ except ImportError:
 
 
 if PYDANTIC_SETTINGS_AVAILABLE:
+
     class Settings(BaseSettings):
         """
         Centralized application configuration.
         Reads from environment variables and .env file.
         """
+
         APP_NAME: str = "Promethium"
         APP_VERSION: str = "1.0.4"
         DEBUG: bool = False
-        
+
         # API
         API_HOST: str = "0.0.0.0"
         API_PORT: int = 8000
         API_PREFIX: str = "/api/v1"
-        CORS_ORIGINS: List[str] = ["*"]
+        CORS_ORIGINS: list[str] = ["*"]
 
         # Database & Storage
         DATABASE_URL: str = "sqlite+aiosqlite:///./promethium_seismic.db"
@@ -59,24 +61,28 @@ if PYDANTIC_SETTINGS_AVAILABLE:
         CELERY_BROKER_URL: str = "redis://localhost:6379/0"
         CELERY_RESULT_BACKEND: str = "redis://localhost:6379/1"
         CELERY_TASK_ALWAYS_EAGER: bool = True
-        
+
         model_config = SettingsConfigDict(
-            env_file=".env", 
-            case_sensitive=True,
-            extra="ignore"
+            env_file=".env", case_sensitive=True, extra="ignore"
         )
 else:
     # Simple settings class for core library usage without pydantic-settings
     class Settings:
         """
         Basic settings for core library usage.
-        For full configuration support, install with: pip install promethium-seismic[server]
+        For full configuration support, install with: pip install promethium-
+        seismic[server]
         """
+
         def __init__(self):
             self.APP_NAME = "Promethium"
             self.APP_VERSION = "1.0.4"
-            self.DEBUG = os.environ.get("DEBUG", "false").lower() in ("true", "1", "yes")
-            
+            self.DEBUG = os.environ.get("DEBUG", "false").lower() in (
+                "true",
+                "1",
+                "yes",
+            )
+
             self.API_HOST = "0.0.0.0"
             self.API_PORT = 8000
             self.API_PREFIX = "/api/v1"
@@ -99,7 +105,6 @@ else:
 def get_settings() -> Settings:
     return Settings()
 
+
 # Module-level settings instance
 settings = get_settings()
-
-

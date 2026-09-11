@@ -1,21 +1,23 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+import numpy as np
 import torch
 from torch.utils.data import Dataset
-import numpy as np
-from typing import Optional, Tuple
+
 
 class SeismicTorchDataset(Dataset):
     """
     PyTorch Dataset for 2D seismic patches.
     """
+
     def __init__(
-        self, 
-        data: np.ndarray, 
-        patch_size: Tuple[int, int] = (64, 64),
-        stride: Tuple[int, int] = (32, 32),
-        missing_trace_prob: float = 0.0
+        self,
+        data: np.ndarray,
+        patch_size: tuple[int, int] = (64, 64),
+        stride: tuple[int, int] = (32, 32),
+        missing_trace_prob: float = 0.0,
     ):
         """
         Args:
@@ -28,7 +30,7 @@ class SeismicTorchDataset(Dataset):
         self.patch_height, self.patch_width = patch_size
         self.stride_y, self.stride_x = stride
         self.missing_trace_prob = missing_trace_prob
-        
+
         # Create patches
         self.patches = []
         h, w = self.data.shape
@@ -38,18 +40,18 @@ class SeismicTorchDataset(Dataset):
                 self.patches.append(
                     self.data[y : y + self.patch_height, x : x + self.patch_width]
                 )
-    
+
     def __len__(self):
         return len(self.patches)
-    
+
     def __getitem__(self, idx):
         patch = self.patches[idx]
-        
+
         # Normalize patch (standardize)
         mean = patch.mean()
         std = patch.std() + 1e-6
         norm_patch = (patch - mean) / std
-        
+
         # Create mask
         mask = np.ones_like(norm_patch)
         if self.missing_trace_prob > 0:
@@ -58,9 +60,9 @@ class SeismicTorchDataset(Dataset):
                 if np.random.random() < self.missing_trace_prob:
                     mask[:, col] = 0
                     norm_patch[:, col] = 0
-        
+
         # To Tensor (C, H, W)
         img = torch.from_numpy(norm_patch).float().unsqueeze(0)
         msk = torch.from_numpy(mask).float().unsqueeze(0)
-        
+
         return img, msk

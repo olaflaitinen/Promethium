@@ -1,27 +1,27 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
-import zarr
-import numpy as np
-import xarray as xr
 from pathlib import Path
-from typing import Union, Tuple
 
-from promethium_seismic.core.logging import get_logger
+import xarray as xr
+import zarr
+
 from promethium_seismic.core.config import get_settings
+from promethium_seismic.core.logging import get_logger
 from promethium_seismic.io.readers import read_segy
 
 logger = get_logger(__name__)
 settings = get_settings()
 
+
 def convert_to_zarr(
-    source_path: Union[str, Path],
+    source_path: str | Path,
     output_name: str,
-    chunk_size: Tuple[int, int] = (1024, 1024)
+    chunk_size: tuple[int, int] = (1024, 1024),
 ) -> Path:
     """
     Converts a SEG-Y file to Zarr format for high-performance random access.
-    
+
     Args:
         source_path: Input SEG-Y file.
         output_name: Name of the output Zarr store (without extension).
@@ -32,35 +32,34 @@ def convert_to_zarr(
     """
     source = Path(source_path)
     output_dir = settings.DATA_STORAGE_PATH / f"{output_name}.zarr"
-    
+
     logger.info(f"Converting {source.name} to Zarr at {output_dir}")
-    
+
     # 1. Read Data (Lazy if possible, but currently eager via readers.py)
     # TODO: Make readers.py yield chunks for generic large file support
     da = read_segy(source)
-    
+
     # 2. Re-chunking strategy
     # Seismic data is accessed:
     # - By trace (vertical)
     # - By time slice (horizontal)
     # - By rectangular patch (ML training)
     # Square-ish chunks (e.g. 1024x1024) offer balanced performance.
-    
+
     ds = da.to_dataset()
     ds = ds.chunk({"trace": chunk_size[0], "time": chunk_size[1]})
-    
+
     # 3. Write via xarray zarr backend
     compressor = zarr.Blosc(cname="zstd", clevel=3, shuffle=2)
-    encoding = {
-        "amplitude": {"compressor": compressor}
-    }
-    
+    encoding = {"amplitude": {"compressor": compressor}}
+
     ds.to_zarr(output_dir, mode="w", encoding=encoding, consolidated=True)
-    
+
     logger.info(f"Conversion complete: {output_dir}")
     return output_dir
 
-def load_zarr(path: Union[str, Path]) -> xr.DataArray:
+
+def load_zarr(path: str | Path) -> xr.DataArray:
     """Load a Seismic Zarr dataset."""
     ds = xr.open_zarr(path, consolidated=True)
     return ds["amplitude"]

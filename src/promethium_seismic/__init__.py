@@ -5,7 +5,7 @@
 # Main package initialization
 
 """
-Promethium is a state-of-the-art, AI-driven framework for seismic signal 
+Promethium is a state-of-the-art, AI-driven framework for seismic signal
 reconstruction, denoising, and geophysical data enhancement.
 
 Distribution Name: promethium-seismic
@@ -18,14 +18,14 @@ Installation:
 Quick Start:
     >>> import promethium_seismic
     >>> from promethium_seismic import load_segy, SeismicRecoveryPipeline
-    >>> 
+    >>>
     >>> # Load seismic data
     >>> data = load_segy("survey.sgy")
-    >>> 
+    >>>
     >>> # Create and run reconstruction pipeline
     >>> pipeline = SeismicRecoveryPipeline.from_preset("unet_denoise_v1")
     >>> result = pipeline.run(data)
-    >>> 
+    >>>
     >>> # Evaluate reconstruction quality
     >>> metrics = promethium_seismic.evaluate_reconstruction(data, result)
     >>> print(metrics)
@@ -46,9 +46,8 @@ __license__ = "MPL-2.0"
 # `import promethium_seismic` costs a few milliseconds and works in an environment
 # that has numpy and scipy and nothing else.
 # -----------------------------------------------------------------------------
-from promethium_seismic.core.config import settings, get_settings
+from promethium_seismic.core.config import get_settings, settings
 from promethium_seismic.core.logging import get_logger
-
 
 # -----------------------------------------------------------------------------
 # Lazy imports
@@ -153,36 +152,35 @@ def __dir__() -> list[str]:
     return sorted(set(globals()) | set(_LAZY))
 
 
-
 def load_miniseed(path: str, **kwargs):
     """
     Load seismic data from miniSEED format.
-    
+
     Args:
         path: Path to miniSEED file.
         **kwargs: Additional arguments passed to obspy.read.
-        
+
     Returns:
         xarray.DataArray with seismic data.
     """
-    from obspy import read as obspy_read
     import numpy as np
     import xarray as xr
-    
+    from obspy import read as obspy_read
+
     stream = obspy_read(path, **kwargs)
-    
+
     # Convert to numpy array
     traces = []
     for tr in stream:
         traces.append(tr.data)
-    
+
     data = np.array(traces, dtype=np.float32)
-    
+
     # Get timing info from first trace
     sample_rate = stream[0].stats.sampling_rate
     n_samples = data.shape[1] if data.ndim > 1 else len(data)
     times = np.arange(n_samples) / sample_rate
-    
+
     return xr.DataArray(
         data,
         dims=("trace", "time"),
@@ -194,30 +192,30 @@ def load_miniseed(path: str, **kwargs):
 def load_sac(path: str, **kwargs):
     """
     Load seismic data from SAC format.
-    
+
     Args:
         path: Path to SAC file.
         **kwargs: Additional arguments passed to obspy.read.
-        
+
     Returns:
         xarray.DataArray with seismic data.
     """
-    from obspy import read as obspy_read
     import numpy as np
     import xarray as xr
-    
+    from obspy import read as obspy_read
+
     stream = obspy_read(path, format="SAC", **kwargs)
-    
+
     traces = []
     for tr in stream:
         traces.append(tr.data)
-    
+
     data = np.array(traces, dtype=np.float32)
-    
+
     sample_rate = stream[0].stats.sampling_rate
     n_samples = data.shape[1] if data.ndim > 1 else len(data)
     times = np.arange(n_samples) / sample_rate
-    
+
     return xr.DataArray(
         data,
         dims=("trace", "time"),
@@ -229,58 +227,65 @@ def load_sac(path: str, **kwargs):
 def get_model(name: str, *, device: str = None):
     """
     Get a pre-defined seismic reconstruction model by name.
-    
+
     Args:
         name: Model name (e.g., 'unet_denoise_v1', 'autoencoder_v1').
         device: Device to load model on ('cuda', 'cpu', or None for auto).
-        
+
     Returns:
         Loaded model ready for inference.
-        
+
     Available models:
         - 'unet_denoise_v1': U-Net for denoising
         - 'unet_reconstruction_v1': U-Net for trace reconstruction
         - 'autoencoder_v1': Autoencoder for compression/denoising
-        
+
     Example:
         >>> model = promethium_seismic.get_model('unet_denoise_v1', device='cuda')
     """
     from promethium_seismic.ml.models.registry import ModelRegistry
     from promethium_seismic.utils.reproducibility import get_device as _get_device
-    
+
     if device is None:
         device = _get_device()
-        
+
     model = ModelRegistry.create(name, {"n_channels": 1, "n_classes": 1})
     model.to(device)
     model.eval()
-    
+
     return model
 
 
 def run_recovery(data, pipeline=None, preset: str = None, **kwargs):
     """
     Run seismic data recovery using a pipeline.
-    
+
     Convenience function that creates a pipeline if needed and runs recovery.
-    
+
     Args:
         data: Input seismic data (numpy array or xarray.DataArray).
         pipeline: SeismicRecoveryPipeline instance. If None, creates from preset.
         preset: Preset name if pipeline is None. Default 'unet_denoise_v1'.
         **kwargs: Additional arguments passed to pipeline.run().
-        
+
     Returns:
         Reconstructed data array.
-        
+
     Example:
-        >>> result = promethium_seismic.run_recovery(noisy_data, preset='unet_denoise_v1')
+        >>> result = promethium_seismic.run_recovery(
+        ...     noisy_data, preset='unet_denoise_v1'
+        ... )
     """
     if pipeline is None:
         if preset is None:
             preset = "unet_denoise_v1"
+        # Imported here rather than at module scope: the pipelines package
+        # pulls torch, and this function is the only thing in the module that
+        # needs it.
+        from promethium_seismic.pipelines import SeismicRecoveryPipeline
+
         pipeline = SeismicRecoveryPipeline.from_preset(preset)
-        
+
     return pipeline.run(data, **kwargs)
 
 
@@ -330,5 +335,3 @@ __all__ = [
     "plot_traces",
     "plot_comparison",
 ]
-
-

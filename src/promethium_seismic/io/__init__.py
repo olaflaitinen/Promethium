@@ -8,9 +8,9 @@ Format-specific readers and writers for seismic data formats
 including SEG-Y, miniSEED, SAC, and SEG-2.
 """
 
+from promethium_seismic.io.formats import detect_format, get_reader, get_writer
 from promethium_seismic.io.readers import read_segy
 from promethium_seismic.io.writers import write_segy
-from promethium_seismic.io.formats import detect_format, get_reader, get_writer
 
 __all__ = [
     "read_segy",

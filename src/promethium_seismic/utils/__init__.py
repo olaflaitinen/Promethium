@@ -10,7 +10,7 @@ Utility functions for reproducibility, data generation, and visualization.
 # Only the numpy based helpers are imported eagerly. Seeding and device
 # selection need torch, and plotting needs matplotlib; both are resolved on
 # first use so that importing promethium_seismic.utils costs nothing.
-from promethium_seismic.utils.synthetic import generate_synthetic_traces, add_noise
+from promethium_seismic.utils.synthetic import add_noise, generate_synthetic_traces
 
 _LAZY = {
     "set_seed": ("promethium_seismic.utils.reproducibility", "ml"),
@@ -35,7 +35,9 @@ def __getattr__(name: str):
     """
     entry = _LAZY.get(name)
     if entry is None:
-        raise AttributeError(f"module 'promethium_seismic.utils' has no attribute '{name}'")
+        raise AttributeError(
+            f"module 'promethium_seismic.utils' has no attribute '{name}'"
+        )
 
     module_name, extra = entry
     import importlib
@@ -57,6 +59,7 @@ def __getattr__(name: str):
 def __dir__() -> list:
     """List the public surface, including names not yet imported."""
     return sorted(set(globals()) | set(_LAZY))
+
 
 __all__ = [
     "set_seed",

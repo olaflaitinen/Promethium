@@ -9,8 +9,8 @@ and structured logging for the Promethium framework.
 """
 
 from promethium_seismic.core.config import settings
-from promethium_seismic.core.logging import get_logger
 from promethium_seismic.core.exceptions import PromethiumError
+from promethium_seismic.core.logging import get_logger
 
 __all__ = [
     "settings",

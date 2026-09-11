@@ -70,6 +70,7 @@ io = [
 # because the classical reconstruction methods do not need it.
 ml = [
     "torch>=2.0.0",
+    "pytorch-lightning>=2.0.0",
     "scikit-learn>=1.2.0",
     "tqdm>=4.65.0",
 ]
@@ -135,7 +136,26 @@ promethium = ["py.typed"]
 [tool.ruff]
 line-length = 88
 target-version = "py310"
+
+[tool.ruff.lint]
+# E and F are pycodestyle and pyflakes, I is import order, B is bugbear and
+# UP modernises syntax for the minimum Python this package supports.
 select = ["E", "F", "I", "B", "UP"]
+
+[tool.ruff.lint.per-file-ignores]
+# typer.Option and typer.Argument belong in argument defaults: that is how
+# typer is documented to work, and the objects carry the help text and the
+# shell completion. Rewriting them to satisfy B008 would break the command
+# line interface to satisfy a rule written for a different situation.
+"src/promethium_seismic/cli/__init__.py" = ["B008"]
+
+# A test that imports a module to prove it imports is doing exactly what it
+# says; ruff reads the import as unused.
+# A test that imports a module to prove it imports is doing exactly what it
+# says; ruff reads the import as unused. B018 fires on the two tests that
+# touch an attribute for its side effect, because resolving the attribute is
+# the thing that raises.
+"tests/*" = ["F401", "B018"]
 
 [tool.black]
 line-length = 88

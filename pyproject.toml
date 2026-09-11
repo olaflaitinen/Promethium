@@ -86,28 +86,6 @@ cli = [
     "rich>=13.0.0",
 ]
 
-# The HTTP API and its storage layer.
-server = [
-    "fastapi>=0.110.0",
-    "uvicorn[standard]>=0.22.0",
-    "pydantic>=2.0",
-    "pydantic-settings>=2.0",
-    "sqlalchemy>=2.0",
-    "aiosqlite>=0.19.0",
-    "asyncpg>=0.29.0",
-    "python-multipart>=0.0.6",
-    "passlib[bcrypt]>=1.7.4",
-    "python-jose[cryptography]>=3.3.0",
-    "psutil>=5.9.0",
-    "requests>=2.25.0",
-]
-
-# Distributed job execution.
-workflows = [
-    "celery>=5.3.0",
-    "redis>=4.6.0",
-]
-
 # Object storage backends.
 cloud = [
     "boto3>=1.28.0",
@@ -131,7 +109,7 @@ dev = [
 # developer needs. The name is the distribution name, not the import name:
 # the old table said promethium[...] and resolved to a different project.
 all = [
-    "promethium-seismic[io,ml,viz,cli,server,workflows,cloud]",
+    "promethium-seismic[io,ml,viz,cli,cloud]",
 ]
 
 [project.scripts]

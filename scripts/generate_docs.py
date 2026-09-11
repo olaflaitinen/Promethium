@@ -26,34 +26,38 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 def generate_api_docs(output_dir: Path) -> None:
     """Generate API documentation using pdoc."""
     print(f"Generating API documentation to {output_dir}...")
-    
+
     api_docs_dir = output_dir / "api"
     api_docs_dir.mkdir(parents=True, exist_ok=True)
-    
-    subprocess.run([
-        sys.executable, "-m", "pdoc",
-        "--output-dir", str(api_docs_dir),
-        "--html",
-        "promethium_seismic"
-    ], check=True)
-    
+
+    subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "pdoc",
+            "--output-dir",
+            str(api_docs_dir),
+            "--html",
+            "promethium_seismic",
+        ],
+        check=True,
+    )
+
     print("API documentation generated successfully")
 
 
 def main() -> None:
     """Main entry point."""
-    parser = argparse.ArgumentParser(
-        description="Generate Promethium documentation"
-    )
+    parser = argparse.ArgumentParser(description="Generate Promethium documentation")
     parser.add_argument(
         "--output-dir",
         type=Path,
         default=Path("docs"),
-        help="Output directory for generated documentation"
+        help="Output directory for generated documentation",
     )
-    
+
     args = parser.parse_args()
-    
+
     generate_api_docs(args.output_dir)
     print("Documentation generation completed")
 

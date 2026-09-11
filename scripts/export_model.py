@@ -26,9 +26,9 @@ def export_model(model_path: Path, output_dir: Path, format: str) -> None:
     """Export model to specified format."""
     print(f"Exporting model from {model_path} to {output_dir}")
     print(f"Export format: {format}")
-    
+
     output_dir.mkdir(parents=True, exist_ok=True)
-    
+
     if format == "onnx":
         export_to_onnx(model_path, output_dir)
     elif format == "torchscript":
@@ -61,26 +61,23 @@ def main() -> None:
         description="Export Promethium models for deployment"
     )
     parser.add_argument(
-        "--model-path",
-        type=Path,
-        required=True,
-        help="Path to trained model"
+        "--model-path", type=Path, required=True, help="Path to trained model"
     )
     parser.add_argument(
         "--output-dir",
         type=Path,
         required=True,
-        help="Output directory for exported model"
+        help="Output directory for exported model",
     )
     parser.add_argument(
         "--format",
         choices=["pytorch", "onnx", "torchscript"],
         default="pytorch",
-        help="Export format"
+        help="Export format",
     )
-    
+
     args = parser.parse_args()
-    
+
     export_model(args.model_path, args.output_dir, args.format)
     print("Model export completed")
 

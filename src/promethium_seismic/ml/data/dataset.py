@@ -8,8 +8,6 @@ from typing import Any
 import numpy as np
 from torch.utils.data import Dataset
 
-from promethium_seismic.io.zarr_wrapper import load_zarr
-
 
 class SeismicDataset(Dataset):
     """
@@ -46,6 +44,11 @@ class SeismicDataset(Dataset):
         self.transform = transform
 
         # Lazy Load
+        # Imported here so that the ml extra does not require the io
+        # extra: these two lines are the only place this module reads a
+        # store, and zarr belongs to a different install.
+        from promethium_seismic.io.zarr_wrapper import load_zarr
+
         self.data = load_zarr(self.data_path)
         self.target = load_zarr(target_path) if target_path else None
 
